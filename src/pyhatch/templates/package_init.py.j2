@@ -1,0 +1,52 @@
+"""
+{{ config.name }}
+{{ "=" * config.name|length }}
+
+{{ config.description }}
+
+This package was generated with pyhatch v{{ pyhatch_version }}.
+
+Quick Start
+-----------
+{% if config.project_type.value == "library" %}
+>>> from {{ config.package_name }} import hello
+>>> hello()
+'Hello from {{ config.name }}!'
+{% elif config.project_type.value == "cli" %}
+Run the CLI with:
+
+    $ {{ config.name }} --help
+{% elif config.project_type.value == "api" %}
+Start the API server with:
+
+    $ uvicorn {{ config.package_name }}.main:app --reload
+{% endif %}
+
+License
+-------
+{{ config.license.value }}
+"""
+
+__version__ = "0.1.0"
+__author__ = "{{ config.author.name }}"
+
+{% if config.project_type.value == "library" %}
+def hello() -> str:
+    """
+    Return a friendly greeting.
+    
+    This is a placeholder function to demonstrate the package structure.
+    Replace this with your actual library code.
+    
+    Returns
+    -------
+    str
+        A greeting message including the package name.
+    
+    Examples
+    --------
+    >>> hello()
+    'Hello from {{ config.name }}!'
+    """
+    return "Hello from {{ config.name }}!"
+{% endif %}

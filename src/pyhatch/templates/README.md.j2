@@ -1,0 +1,196 @@
+# {{ config.name }}
+
+{{ config.description }}
+
+{% if config.features.github_actions %}
+[![CI](https://github.com/{{ config.author.name | lower | replace(' ', '') }}/{{ config.name }}/actions/workflows/ci.yml/badge.svg)](https://github.com/{{ config.author.name | lower | replace(' ', '') }}/{{ config.name }}/actions/workflows/ci.yml)
+{% endif %}
+[![Python {{ config.python_version.value }}+](https://img.shields.io/badge/python-{{ config.python_version.value }}+-blue.svg)](https://www.python.org/downloads/)
+[![License: {{ config.license.value }}](https://img.shields.io/badge/License-{{ config.license.value }}-green.svg)](LICENSE)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+
+## Features
+
+- 🚀 **Fast**: Built with modern Python best practices
+- 🔒 **Type Safe**: Full type annotations with {{ config.tooling.type_checker }}
+- 📦 **Modern Packaging**: Uses `uv` for dependency management
+- 🧹 **Clean Code**: Enforced with `ruff` linting and formatting
+
+## Installation
+
+### Using uv (recommended)
+
+```bash
+# Install uv if you haven't already
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install {{ config.name }}
+uv add {{ config.name }}
+```
+
+### Using pip
+
+```bash
+pip install {{ config.name }}
+```
+
+### From source
+
+```bash
+git clone https://github.com/{{ config.author.name | lower | replace(' ', '') }}/{{ config.name }}.git
+cd {{ config.name }}
+uv sync
+```
+
+## Quick Start
+
+{% if config.project_type.value == "library" %}
+```python
+from {{ config.package_name }} import hello
+
+# Get a greeting
+message = hello()
+print(message)  # "Hello from {{ config.name }}!"
+```
+{% elif config.project_type.value == "cli" %}
+```bash
+# Show help
+{{ config.name }} --help
+
+# Run a command
+{{ config.name }} hello World
+
+# Show version
+{{ config.name }} --version
+```
+{% elif config.project_type.value == "api" %}
+```bash
+# Start the development server
+uvicorn {{ config.package_name }}.main:app --reload
+
+# The API is now available at:
+# - http://localhost:8000 (root)
+# - http://localhost:8000/docs (Swagger UI)
+# - http://localhost:8000/redoc (ReDoc)
+```
+{% else %}
+```bash
+# Run the application
+python -m {{ config.package_name }}.main
+```
+{% endif %}
+
+## Development
+
+### Prerequisites
+
+- Python {{ config.python_version.value }} or higher
+- [uv](https://docs.astral.sh/uv/) (recommended) or pip
+
+### Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/{{ config.author.name | lower | replace(' ', '') }}/{{ config.name }}.git
+cd {{ config.name }}
+
+# Install dependencies (including dev dependencies)
+uv sync --dev
+
+# Install pre-commit hooks
+{% if config.features.pre_commit %}
+uv run pre-commit install
+{% endif %}
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+uv run pytest
+
+# Run with coverage report
+uv run pytest --cov
+
+# Run specific test file
+uv run pytest tests/test_main.py
+```
+
+### Code Quality
+
+```bash
+# Run linter
+uv run ruff check .
+
+# Run formatter
+uv run ruff format .
+
+# Run type checker
+uv run {{ config.tooling.type_checker }}
+
+# Run all checks (what CI runs)
+uv run ruff check . && uv run ruff format --check . && uv run {{ config.tooling.type_checker }}
+```
+
+## Project Structure
+
+```
+{{ config.name }}/
+{% if config.project_type.uses_src_layout %}
+├── src/
+│   └── {{ config.package_name }}/
+│       ├── __init__.py
+│       ├── py.typed
+{% if config.project_type.value == "cli" %}
+│       └── cli.py
+{% elif config.project_type.value == "api" %}
+│       └── main.py
+{% else %}
+│       └── main.py
+{% endif %}
+{% else %}
+├── {{ config.package_name }}/
+│   ├── __init__.py
+│   └── main.py
+{% endif %}
+├── tests/
+│   └── test_main.py
+{% if config.features.github_actions %}
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+{% endif %}
+├── pyproject.toml
+├── README.md
+└── LICENSE
+```
+
+## Configuration
+
+All project configuration is in `pyproject.toml`:
+
+- **Project metadata**: name, version, dependencies
+- **Ruff**: linting and formatting rules
+- **{{ config.tooling.type_checker }}**: type checking settings
+- **pytest**: test configuration
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Run the tests (`uv run pytest`)
+5. Run the linters (`uv run ruff check . && uv run ruff format .`)
+6. Commit your changes (`git commit -m 'Add amazing feature'`)
+7. Push to the branch (`git push origin feature/amazing-feature`)
+8. Open a Pull Request
+
+## License
+
+This project is licensed under the {{ config.license.value }} License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+*Generated with [pyhatch](https://github.com/Technical-1/pyhatch) v{{ pyhatch_version }}*

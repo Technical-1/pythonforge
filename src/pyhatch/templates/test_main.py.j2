@@ -1,0 +1,248 @@
+"""
+Tests for {{ config.name }}
+{{ "=" * (config.name|length + 10) }}
+
+This module contains unit tests for the {{ config.package_name }} package.
+Tests are written using pytest and follow the Arrange-Act-Assert pattern.
+
+Running Tests
+-------------
+    # Run all tests
+    $ pytest
+
+    # Run with coverage
+    $ pytest --cov={{ config.package_name }}
+
+    # Run specific test
+    $ pytest tests/test_main.py::test_version_exists
+
+Test Organization
+-----------------
+Tests are organized to mirror the source structure:
+- test_main.py: Tests for the main module
+- test_*.py: Additional test modules as needed
+
+Fixtures
+--------
+Common fixtures should be placed in conftest.py for reuse.
+"""
+
+import pytest
+
+from {{ config.package_name }} import __version__
+{% if config.project_type.value == "library" %}
+from {{ config.package_name }} import hello
+{% elif config.project_type.value == "cli" %}
+from typer.testing import CliRunner
+from {{ config.package_name }}.cli import app
+{% elif config.project_type.value == "api" %}
+from fastapi.testclient import TestClient
+from {{ config.package_name }}.main import app
+{% endif %}
+
+
+# =============================================================================
+# Fixtures
+# =============================================================================
+
+{% if config.project_type.value == "cli" %}
+@pytest.fixture
+def runner() -> CliRunner:
+    """
+    Create a CLI test runner.
+    
+    Returns
+    -------
+    CliRunner
+        A Typer test runner for invoking CLI commands.
+    """
+    return CliRunner()
+
+{% elif config.project_type.value == "api" %}
+@pytest.fixture
+def client() -> TestClient:
+    """
+    Create a FastAPI test client.
+    
+    Returns
+    -------
+    TestClient
+        A test client for making requests to the API.
+    """
+    return TestClient(app)
+
+{% endif %}
+
+# =============================================================================
+# Version Tests
+# =============================================================================
+
+def test_version_exists() -> None:
+    """
+    Test that the package has a version string.
+    
+    This is a basic sanity check to ensure the package is properly
+    configured with version metadata.
+    """
+    assert __version__ is not None
+    assert isinstance(__version__, str)
+    assert len(__version__) > 0
+
+
+def test_version_format() -> None:
+    """
+    Test that the version follows semantic versioning format.
+    
+    Version should be in the format X.Y.Z where X, Y, Z are integers.
+    """
+    parts = __version__.split(".")
+    assert len(parts) >= 2, "Version should have at least major.minor"
+    
+    # First two parts should be numeric
+    assert parts[0].isdigit(), "Major version should be numeric"
+    assert parts[1].isdigit(), "Minor version should be numeric"
+
+
+# =============================================================================
+# Core Functionality Tests
+# =============================================================================
+
+{% if config.project_type.value == "library" %}
+class TestHello:
+    """Tests for the hello function."""
+    
+    def test_hello_returns_string(self) -> None:
+        """Test that hello() returns a string."""
+        result = hello()
+        assert isinstance(result, str)
+    
+    def test_hello_contains_package_name(self) -> None:
+        """Test that hello() mentions the package name."""
+        result = hello()
+        assert "{{ config.name }}" in result
+    
+    def test_hello_is_greeting(self) -> None:
+        """Test that hello() returns a greeting message."""
+        result = hello()
+        assert "Hello" in result
+
+{% elif config.project_type.value == "cli" %}
+class TestCLI:
+    """Tests for the CLI commands."""
+    
+    def test_help_shows_usage(self, runner: CliRunner) -> None:
+        """Test that --help shows usage information."""
+        result = runner.invoke(app, ["--help"])
+        assert result.exit_code == 0
+        assert "{{ config.description }}" in result.stdout or "Usage" in result.stdout
+    
+    def test_version_flag(self, runner: CliRunner) -> None:
+        """Test that --version shows the version."""
+        result = runner.invoke(app, ["--version"])
+        assert result.exit_code == 0
+        assert __version__ in result.stdout
+    
+    def test_hello_command(self, runner: CliRunner) -> None:
+        """Test the hello command with default arguments."""
+        result = runner.invoke(app, ["hello"])
+        assert result.exit_code == 0
+        assert "Hello" in result.stdout
+        assert "World" in result.stdout
+    
+    def test_hello_with_name(self, runner: CliRunner) -> None:
+        """Test the hello command with a custom name."""
+        result = runner.invoke(app, ["hello", "Alice"])
+        assert result.exit_code == 0
+        assert "Alice" in result.stdout
+    
+    def test_hello_with_count(self, runner: CliRunner) -> None:
+        """Test the hello command with multiple greetings."""
+        result = runner.invoke(app, ["hello", "Bob", "--count", "3"])
+        assert result.exit_code == 0
+        assert result.stdout.count("Bob") == 3
+    
+    def test_info_command(self, runner: CliRunner) -> None:
+        """Test the info command."""
+        result = runner.invoke(app, ["info"])
+        assert result.exit_code == 0
+        assert "{{ config.name }}" in result.stdout
+
+{% elif config.project_type.value == "api" %}
+class TestAPI:
+    """Tests for the API endpoints."""
+    
+    def test_root_endpoint(self, client: TestClient) -> None:
+        """Test the root endpoint returns welcome message."""
+        response = client.get("/")
+        assert response.status_code == 200
+        data = response.json()
+        assert "message" in data
+        assert "{{ config.name }}" in data["message"]
+    
+    def test_health_endpoint(self, client: TestClient) -> None:
+        """Test the health check endpoint."""
+        response = client.get("/health")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "healthy"
+    
+    def test_hello_endpoint(self, client: TestClient) -> None:
+        """Test the hello endpoint with a name."""
+        response = client.get("/hello/Alice")
+        assert response.status_code == 200
+        data = response.json()
+        assert "Hello, Alice!" in data["message"]
+    
+    def test_hello_with_special_characters(self, client: TestClient) -> None:
+        """Test hello endpoint handles special characters."""
+        response = client.get("/hello/Dr.%20Smith")
+        assert response.status_code == 200
+        data = response.json()
+        assert "Smith" in data["message"]
+
+{% else %}
+class TestMain:
+    """Tests for the main module."""
+    
+    def test_module_is_importable(self) -> None:
+        """Test that the main module can be imported."""
+        from {{ config.package_name }} import main  # noqa: F401
+        assert True  # If we get here, import succeeded
+{% endif %}
+
+
+# =============================================================================
+# Edge Cases and Error Handling
+# =============================================================================
+
+{% if config.project_type.value == "cli" %}
+class TestCLIEdgeCases:
+    """Tests for CLI edge cases and error handling."""
+    
+    def test_invalid_count_rejected(self, runner: CliRunner) -> None:
+        """Test that invalid count values are rejected."""
+        result = runner.invoke(app, ["hello", "Test", "--count", "0"])
+        assert result.exit_code != 0
+    
+    def test_empty_name_uses_default(self, runner: CliRunner) -> None:
+        """Test that omitting name uses the default."""
+        result = runner.invoke(app, ["hello"])
+        assert result.exit_code == 0
+        assert "World" in result.stdout
+
+{% elif config.project_type.value == "api" %}
+class TestAPIEdgeCases:
+    """Tests for API edge cases and error handling."""
+    
+    def test_nonexistent_endpoint_returns_404(self, client: TestClient) -> None:
+        """Test that unknown endpoints return 404."""
+        response = client.get("/nonexistent")
+        assert response.status_code == 404
+    
+    def test_hello_with_empty_name(self, client: TestClient) -> None:
+        """Test hello endpoint behavior with edge case names."""
+        # Empty path segment should 404 or redirect
+        response = client.get("/hello/")
+        # Behavior depends on FastAPI routing config
+        assert response.status_code in (200, 307, 404)
+{% endif %}

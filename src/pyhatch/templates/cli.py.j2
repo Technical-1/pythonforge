@@ -1,0 +1,178 @@
+"""
+{{ config.name }} CLI
+{{ "=" * (config.name|length + 4) }}
+
+Command-line interface for {{ config.name }}.
+
+This module provides the main entry point for the CLI application,
+built with Typer for a modern, type-hinted command-line experience.
+
+Usage
+-----
+    $ {{ config.name }} --help
+    $ {{ config.name }} hello --name World
+
+The CLI is registered as an entry point in pyproject.toml, so after
+installation it can be invoked directly by name.
+"""
+
+from typing import Annotated, Optional
+
+import typer
+from rich import print as rprint
+from rich.console import Console
+from rich.panel import Panel
+
+from {{ config.package_name }} import __version__
+
+
+# =============================================================================
+# CLI Application Setup
+# =============================================================================
+
+# Create the main Typer application instance
+# The `no_args_is_help=True` means running just `{{ config.name }}` shows help
+app = typer.Typer(
+    name="{{ config.name }}",
+    help="{{ config.description }}",
+    no_args_is_help=True,
+    add_completion=False,  # Disable shell completion for simplicity
+)
+
+# Console for rich output
+console = Console()
+
+
+# =============================================================================
+# Version Callback
+# =============================================================================
+
+def version_callback(value: bool) -> None:
+    """
+    Display version information and exit.
+    
+    This is a callback function for the --version flag. When invoked,
+    it prints the version and raises Exit to stop further processing.
+    
+    Parameters
+    ----------
+    value : bool
+        True if --version was passed, False otherwise.
+    """
+    if value:
+        rprint(f"[bold green]{{ config.name }}[/] version [cyan]{__version__}[/]")
+        raise typer.Exit()
+
+
+# =============================================================================
+# CLI Commands
+# =============================================================================
+
+@app.callback()
+def main(
+    version: Annotated[
+        Optional[bool],
+        typer.Option(
+            "--version",
+            "-V",
+            help="Show version and exit.",
+            callback=version_callback,
+            is_eager=True,  # Process before other options
+        ),
+    ] = None,
+) -> None:
+    """
+    {{ config.description }}
+    
+    Use --help on any command for more information.
+    """
+    # This callback runs before any command
+    # Can be used for global setup (logging, config, etc.)
+    pass
+
+
+@app.command()
+def hello(
+    name: Annotated[
+        str,
+        typer.Argument(
+            help="Name to greet",
+        ),
+    ] = "World",
+    count: Annotated[
+        int,
+        typer.Option(
+            "--count",
+            "-c",
+            help="Number of times to greet",
+            min=1,
+            max=10,
+        ),
+    ] = 1,
+    formal: Annotated[
+        bool,
+        typer.Option(
+            "--formal",
+            "-f",
+            help="Use formal greeting",
+        ),
+    ] = False,
+) -> None:
+    """
+    Greet someone by name.
+    
+    This is a sample command demonstrating Typer's features including
+    arguments, options, and rich output.
+    
+    Examples
+    --------
+    Basic greeting:
+    
+        $ {{ config.name }} hello Alice
+    
+    Multiple greetings:
+    
+        $ {{ config.name }} hello Bob --count 3
+    
+    Formal greeting:
+    
+        $ {{ config.name }} hello "Dr. Smith" --formal
+    """
+    greeting = "Good day" if formal else "Hello"
+    
+    for _ in range(count):
+        message = f"{greeting}, {name}!"
+        
+        if formal:
+            console.print(Panel(message, title="{{ config.name }}", border_style="blue"))
+        else:
+            rprint(f"[bold green]{message}[/]")
+
+
+@app.command()
+def info() -> None:
+    """
+    Display information about this CLI.
+    
+    Shows version, author, and configuration details in a formatted panel.
+    """
+    info_text = f"""
+[bold]{{ config.name }}[/] v{__version__}
+    
+[dim]{{ config.description }}[/]
+
+[yellow]Author:[/] {{ config.author.name }}
+[yellow]License:[/] {{ config.license.value }}
+[yellow]Python:[/] {{ config.python_version.requires_python }}
+    """
+    
+    console.print(Panel(info_text.strip(), title="About", border_style="cyan"))
+
+
+# =============================================================================
+# Entry Point
+# =============================================================================
+
+if __name__ == "__main__":
+    # This allows running the module directly: python -m {{ config.package_name }}.cli
+    app()

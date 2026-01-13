@@ -1,0 +1,45 @@
+# {{ config.name }}
+
+{{ config.description }}
+
+## Installation
+
+```bash
+pip install {{ config.name }}
+```
+
+Or with [uv](https://docs.astral.sh/uv/):
+
+```bash
+uv add {{ config.name }}
+```
+
+## Quick Start
+
+{% if config.project_type.value == "cli" %}
+```bash
+# Run the CLI
+{{ config.name }} --help
+```
+{% elif config.project_type.value == "api" %}
+```python
+# Start the API server
+uvicorn {{ config.package_name }}.main:app --reload
+```
+{% else %}
+```python
+import {{ config.package_name }}
+
+# Your code here
+```
+{% endif %}
+
+## Features
+
+- Modern Python {{ config.python_version.value }}+ support
+- Type-safe with full type annotations
+- Well-tested and documented
+
+## License
+
+{{ config.license.value }}

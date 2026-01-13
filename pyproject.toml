@@ -1,0 +1,245 @@
+# =============================================================================
+# pyhatch - Modern Python Project Bootstrapper
+# =============================================================================
+# A CLI tool that creates production-ready Python projects with 2025's best
+# toolchain: uv, ruff, basedpyright, pytest, and pre-commit.
+#
+# This pyproject.toml serves as both the project configuration AND a reference
+# implementation of what pyhatch generates for users.
+# =============================================================================
+
+[project]
+name = "pyhatch"
+version = "0.1.0"
+description = "Modern Python project bootstrapper with 2025's best toolchain"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [
+    { name = "Technical-1", email = "jacobkanfer8@gmail.com" }
+]
+keywords = [
+    "python",
+    "project",
+    "template",
+    "scaffolding",
+    "bootstrap",
+    "uv",
+    "ruff",
+    "cli",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Utilities",
+    "Typing :: Typed",
+]
+
+# -----------------------------------------------------------------------------
+# Dependencies
+# -----------------------------------------------------------------------------
+# Core runtime dependencies - kept minimal for fast installation
+dependencies = [
+    "typer>=0.12.0",           # CLI framework with rich integration
+    "rich>=13.0.0",            # Beautiful terminal output
+    "jinja2>=3.1.0",           # Template rendering
+    "questionary>=2.0.0",      # Interactive prompts
+    "tomli>=2.0.0",            # TOML reading (Python 3.11+ has tomllib but we want consistency)
+    "tomli-w>=1.0.0",          # TOML writing
+    "tomlkit>=0.13.0",         # TOML manipulation with comment preservation (for upgrade command)
+    "pydantic>=2.0.0",         # Data validation and settings
+]
+
+[project.optional-dependencies]
+# Development dependencies - only needed for working on pyhatch itself
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=5.0.0",
+    "basedpyright>=1.20.0",
+    "pre-commit>=3.8.0",
+    "ruff>=0.8.0",
+]
+
+# -----------------------------------------------------------------------------
+# Entry Points
+# -----------------------------------------------------------------------------
+[project.scripts]
+# Main CLI entry point - users will run `pyhatch` command
+pyhatch = "pyhatch.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/Technical-1/pyhatch"
+Documentation = "https://github.com/Technical-1/pyhatch#readme"
+Repository = "https://github.com/Technical-1/pyhatch"
+Issues = "https://github.com/Technical-1/pyhatch/issues"
+
+# =============================================================================
+# Build System Configuration
+# =============================================================================
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pyhatch"]
+
+# =============================================================================
+# Ruff Configuration - Modern Python Linting & Formatting
+# =============================================================================
+# Ruff replaces: flake8, black, isort, pyupgrade, and more
+# See: https://docs.astral.sh/ruff/rules/
+
+[tool.ruff]
+# Target Python version for syntax/feature detection
+target-version = "py311"
+
+# Maximum line length (matches black's default)
+line-length = 88
+
+# Directories to exclude from linting
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+    ".eggs",
+]
+
+[tool.ruff.lint]
+# Rule selection - these are opinionated defaults for high code quality
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # Pyflakes (undefined names, unused imports)
+    "I",      # isort (import sorting)
+    "UP",     # pyupgrade (modernize Python syntax)
+    "B",      # flake8-bugbear (common bugs and design problems)
+    "SIM",    # flake8-simplify (simplify code)
+    "RUF",    # Ruff-specific rules
+    "C4",     # flake8-comprehensions (better comprehensions)
+    "DTZ",    # flake8-datetimez (timezone-aware datetimes)
+    "T20",    # flake8-print (no print statements in production)
+    "PTH",    # flake8-use-pathlib (prefer pathlib over os.path)
+    "ERA",    # eradicate (commented-out code)
+    "PL",     # Pylint rules
+    "PERF",   # Perflint (performance anti-patterns)
+]
+
+# Rules to ignore (with justification)
+ignore = [
+    "E501",     # Line too long - let formatter handle this
+    "PLR0913",  # Too many arguments - sometimes necessary for CLI
+    "PLR2004",  # Magic value comparison - too noisy
+]
+
+# Allow autofix for all enabled rules
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.lint.per-file-ignores]
+# Tests can use print, assertions, and magic values
+"tests/**/*.py" = ["T20", "PLR2004", "S101"]
+
+[tool.ruff.lint.isort]
+# Import sorting configuration
+known-first-party = ["pyhatch"]
+force-single-line = false
+lines-after-imports = 2
+
+[tool.ruff.format]
+# Formatting configuration (replaces black)
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+# Format docstrings code examples
+docstring-code-format = true
+
+# =============================================================================
+# Type Checking Configuration - basedpyright
+# =============================================================================
+# basedpyright is a stricter fork of pyright with additional checks
+# See: https://docs.basedpyright.com/
+
+[tool.basedpyright]
+# Type checking strictness level
+# Options: "off", "basic", "standard", "strict", "all"
+typeCheckingMode = "standard"
+
+# Python version for type checking
+pythonVersion = "3.11"
+
+# Path configuration
+pythonPlatform = "All"
+include = ["src"]
+exclude = [
+    "**/__pycache__",
+    ".venv",
+    "build",
+    "dist",
+]
+
+# Diagnostic settings - tune these based on project needs
+reportMissingImports = true
+reportMissingTypeStubs = false
+reportUnusedImport = true
+reportUnusedVariable = true
+reportDuplicateImport = true
+
+# =============================================================================
+# Testing Configuration - pytest
+# =============================================================================
+[tool.pytest.ini_options]
+# Test discovery paths
+testpaths = ["tests"]
+
+# Minimum pytest version
+minversion = "8.0"
+
+# Additional command line options
+addopts = [
+    "-v",                          # Verbose output
+    "--strict-markers",            # Fail on unknown markers
+    "--strict-config",             # Fail on config errors
+    "-ra",                         # Show summary of all results
+    "--cov=src/pyhatch",           # Coverage for our package
+    "--cov-report=term-missing",   # Show missing lines in terminal
+    "--cov-report=html",           # Generate HTML coverage report
+    "--cov-fail-under=80",         # Fail if coverage below 80%
+]
+
+# Custom markers for test categorization
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests requiring external resources",
+]
+
+# =============================================================================
+# Coverage Configuration
+# =============================================================================
+[tool.coverage.run]
+source = ["src/pyhatch"]
+branch = true
+parallel = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]

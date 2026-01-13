@@ -1,0 +1,128 @@
+# =============================================================================
+# pyinit - PyPI Publishing Workflow
+# =============================================================================
+# This workflow automatically publishes to PyPI when a GitHub release is created.
+# It uses trusted publishing (OIDC) - no API tokens needed!
+#
+# Setup required:
+# 1. Go to PyPI → Your Projects → pyinit → Settings → Publishing
+# 2. Add GitHub as a trusted publisher with:
+#    - Owner: Technical-1
+#    - Repository: pyinit
+#    - Workflow: publish.yml
+# =============================================================================
+
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+  # Allow manual triggering for testing
+  workflow_dispatch:
+
+jobs:
+  # ===========================================================================
+  # Build Package
+  # ===========================================================================
+  build:
+    name: Build Distribution
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tools
+        run: pip install build
+
+      - name: Build package
+        run: python -m build
+
+      - name: Upload distribution artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+  # ===========================================================================
+  # Publish to TestPyPI (for testing)
+  # ===========================================================================
+  publish-testpypi:
+    name: Publish to TestPyPI
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/pyinit
+
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download distribution artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  # ===========================================================================
+  # Publish to PyPI (production)
+  # ===========================================================================
+  publish-pypi:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+
+    environment:
+      name: pypi
+      url: https://pypi.org/p/pyinit
+
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download distribution artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  # ===========================================================================
+  # Create GitHub Release Assets
+  # ===========================================================================
+  github-release:
+    name: Upload Release Assets
+    needs: [build, publish-pypi]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download distribution artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/*

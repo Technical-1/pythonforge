@@ -1,0 +1,125 @@
+"""
+{{ config.name }} - Main Application Module
+{{ "=" * (config.name|length + 26) }}
+
+{% if config.project_type.value == "api" %}
+This module defines the FastAPI application and its routes.
+
+To run the development server:
+
+    $ uvicorn {{ config.package_name }}.main:app --reload
+
+The API will be available at http://localhost:8000
+API documentation at http://localhost:8000/docs
+{% else %}
+This is the main entry point for the {{ config.name }} application.
+
+To run:
+
+    $ python -m {{ config.package_name }}.main
+
+Or after installation:
+
+    $ python -c "from {{ config.package_name }}.main import main; main()"
+{% endif %}
+"""
+{% if config.project_type.value == "api" %}
+
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+
+from {{ config.package_name }} import __version__
+
+
+# =============================================================================
+# Application Setup
+# =============================================================================
+
+app = FastAPI(
+    title="{{ config.name }}",
+    description="{{ config.description }}",
+    version=__version__,
+    docs_url="/docs",
+    redoc_url="/redoc",
+)
+
+
+# =============================================================================
+# Routes
+# =============================================================================
+
+@app.get("/")
+async def root() -> dict[str, str]:
+    """
+    Root endpoint returning a welcome message.
+    
+    Returns
+    -------
+    dict
+        Welcome message with API name and version.
+    """
+    return {
+        "message": "Welcome to {{ config.name }}",
+        "version": __version__,
+    }
+
+
+@app.get("/health")
+async def health_check() -> JSONResponse:
+    """
+    Health check endpoint for monitoring.
+    
+    Returns
+    -------
+    JSONResponse
+        Status indicating the service is healthy.
+    """
+    return JSONResponse(
+        content={"status": "healthy"},
+        status_code=200,
+    )
+
+
+@app.get("/hello/{name}")
+async def hello(name: str) -> dict[str, str]:
+    """
+    Greet someone by name.
+    
+    Parameters
+    ----------
+    name : str
+        The name to greet.
+    
+    Returns
+    -------
+    dict
+        A greeting message.
+    
+    Examples
+    --------
+    GET /hello/World
+    {"message": "Hello, World!"}
+    """
+    return {"message": f"Hello, {name}!"}
+
+{% else %}
+
+from {{ config.package_name }} import __version__
+
+
+def main() -> None:
+    """
+    Main application entry point.
+    
+    This function is called when the application starts. Add your
+    application logic here.
+    """
+    print(f"{{ config.name }} v{__version__}")
+    print("{{ config.description }}")
+    print()
+    print("Hello from {{ config.name }}!")
+
+
+if __name__ == "__main__":
+    main()
+{% endif %}
