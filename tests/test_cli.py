@@ -28,8 +28,8 @@ from quickforge.cli import app
 
 @pytest.fixture
 def runner() -> CliRunner:
-    """Create a CLI test runner."""
-    return CliRunner()
+    """Create a CLI test runner with consistent terminal width."""
+    return CliRunner(env={"COLUMNS": "200"})
 
 
 @pytest.fixture
