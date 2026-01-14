@@ -220,7 +220,7 @@ addopts = [
     "--cov=src/quickforge",           # Coverage for our package
     "--cov-report=term-missing",   # Show missing lines in terminal
     "--cov-report=html",           # Generate HTML coverage report
-    "--cov-fail-under=60",         # Fail if coverage below 60%
+    "--cov-fail-under=80",         # Fail if coverage below 80%
 ]
 
 # Custom markers for test categorization
