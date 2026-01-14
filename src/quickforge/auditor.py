@@ -1,5 +1,5 @@
 """
-pyhatch.auditor - Project Audit Module
+quickforge.auditor - Project Audit Module
 ======================================
 
 This module provides functionality to audit existing Python projects
@@ -29,7 +29,7 @@ Features
 
 Usage
 -----
->>> from pyhatch.auditor import audit_project
+>>> from quickforge.auditor import audit_project
 >>> from pathlib import Path
 >>>
 >>> result = audit_project(Path("./myproject"))
@@ -53,10 +53,10 @@ from __future__ import annotations
 
 import ast
 import configparser
-import re
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
+
 
 try:
     import tomllib
@@ -70,6 +70,7 @@ class AuditCategory(str, Enum):
 
     Used to organize recommendations by area of concern.
     """
+
     TOOLING = "tooling"
     CONFIGURATION = "configuration"
     DEPENDENCIES = "dependencies"
@@ -83,10 +84,11 @@ class Severity(str, Enum):
 
     Helps users prioritize which issues to address first.
     """
-    INFO = "info"           # Nice to have
-    WARNING = "warning"     # Should fix eventually
-    ERROR = "error"         # Should fix soon
-    CRITICAL = "critical"   # Fix immediately
+
+    INFO = "info"  # Nice to have
+    WARNING = "warning"  # Should fix eventually
+    ERROR = "error"  # Should fix soon
+    CRITICAL = "critical"  # Fix immediately
 
 
 @dataclass
@@ -111,6 +113,7 @@ class Recommendation:
     action : str | None
         Specific action to take (e.g., command to run).
     """
+
     category: AuditCategory
     message: str
     severity: Severity
@@ -137,6 +140,7 @@ class AuditResult:
     tooling_detected : dict[str, str]
         Detected tools and their versions.
     """
+
     project_path: Path
     recommendations: list[Recommendation] = field(default_factory=list)
     score: int = 100
@@ -167,12 +171,13 @@ class AuditResult:
 # Detection Functions
 # =============================================================================
 
+
 def _read_toml(path: Path) -> dict | None:
     """Read a TOML file and return its contents."""
     if not path.exists():
         return None
     try:
-        with open(path, "rb") as f:
+        with path.open("rb") as f:
             return tomllib.load(f)
     except Exception:
         return None
@@ -368,7 +373,9 @@ def detect_import_sorter(path: Path) -> tuple[str | None, dict[str, str]]:
         # Check if isort rules are enabled
         if "lint" in ruff_config:
             select = ruff_config.get("lint", {}).get("select", [])
-            if "I" in select or any(s.startswith("I") for s in select if isinstance(s, str)):
+            if "I" in select or any(
+                s.startswith("I") for s in select if isinstance(s, str)
+            ):
                 return "ruff", {"config": "pyproject.toml"}
 
     # Check for isort
@@ -492,7 +499,17 @@ def analyze_type_coverage(path: Path) -> tuple[float, int, int]:
     python_files = list(path.glob("**/*.py"))
 
     # Exclude common non-source directories
-    exclude_patterns = {"venv", ".venv", "env", ".env", "node_modules", "__pycache__", ".git", "build", "dist"}
+    exclude_patterns = {
+        "venv",
+        ".venv",
+        "env",
+        ".env",
+        "node_modules",
+        "__pycache__",
+        ".git",
+        "build",
+        "dist",
+    }
 
     for py_file in python_files:
         # Skip excluded directories
@@ -500,7 +517,7 @@ def analyze_type_coverage(path: Path) -> tuple[float, int, int]:
             continue
 
         try:
-            with open(py_file, encoding="utf-8") as f:
+            with py_file.open(encoding="utf-8") as f:
                 source = f.read()
 
             tree = ast.parse(source)
@@ -515,7 +532,11 @@ def analyze_type_coverage(path: Path) -> tuple[float, int, int]:
                     if node.returns is not None:
                         has_annotation = True
                     else:
-                        for arg in node.args.args + node.args.posonlyargs + node.args.kwonlyargs:
+                        for arg in (
+                            node.args.args
+                            + node.args.posonlyargs
+                            + node.args.kwonlyargs
+                        ):
                             if arg.annotation is not None:
                                 has_annotation = True
                                 break
@@ -537,6 +558,7 @@ def analyze_type_coverage(path: Path) -> tuple[float, int, int]:
 # Recommendation Generation
 # =============================================================================
 
+
 def _generate_tooling_recommendations(
     result: AuditResult,
     pkg_manager: str | None,
@@ -551,131 +573,165 @@ def _generate_tooling_recommendations(
 
     # Package manager recommendations
     if pkg_manager == "poetry":
-        result.recommendations.append(Recommendation(
-            category=AuditCategory.TOOLING,
-            message="Consider migrating from Poetry to uv for faster dependency resolution",
-            severity=Severity.INFO,
-            action="pyhatch upgrade . --from poetry",
-        ))
+        result.recommendations.append(
+            Recommendation(
+                category=AuditCategory.TOOLING,
+                message="Consider migrating from Poetry to uv for faster dependency resolution",
+                severity=Severity.INFO,
+                action="quickforge upgrade . --from poetry",
+            )
+        )
     elif pkg_manager == "pip":
-        result.recommendations.append(Recommendation(
-            category=AuditCategory.TOOLING,
-            message="Consider migrating from pip/requirements.txt to uv with pyproject.toml",
-            severity=Severity.INFO,
-            action="pyhatch upgrade . --from pip",
-        ))
+        result.recommendations.append(
+            Recommendation(
+                category=AuditCategory.TOOLING,
+                message="Consider migrating from pip/requirements.txt to uv with pyproject.toml",
+                severity=Severity.INFO,
+                action="quickforge upgrade . --from pip",
+            )
+        )
     elif pkg_manager == "pipenv":
-        result.recommendations.append(Recommendation(
-            category=AuditCategory.TOOLING,
-            message="Consider migrating from Pipenv to uv for better performance",
-            severity=Severity.INFO,
-            action="pyhatch upgrade . --from pipenv",
-        ))
+        result.recommendations.append(
+            Recommendation(
+                category=AuditCategory.TOOLING,
+                message="Consider migrating from Pipenv to uv for better performance",
+                severity=Severity.INFO,
+                action="quickforge upgrade . --from pipenv",
+            )
+        )
     elif pkg_manager == "setuptools":
-        result.recommendations.append(Recommendation(
-            category=AuditCategory.TOOLING,
-            message="Consider migrating from setup.py to pyproject.toml (PEP 621)",
-            severity=Severity.WARNING,
-            action="pyhatch upgrade . --from setuptools",
-        ))
+        result.recommendations.append(
+            Recommendation(
+                category=AuditCategory.TOOLING,
+                message="Consider migrating from setup.py to pyproject.toml (PEP 621)",
+                severity=Severity.WARNING,
+                action="quickforge upgrade . --from setuptools",
+            )
+        )
     elif pkg_manager is None:
-        result.recommendations.append(Recommendation(
-            category=AuditCategory.TOOLING,
-            message="No package manager detected. Consider adding a pyproject.toml",
-            severity=Severity.WARNING,
-        ))
+        result.recommendations.append(
+            Recommendation(
+                category=AuditCategory.TOOLING,
+                message="No package manager detected. Consider adding a pyproject.toml",
+                severity=Severity.WARNING,
+            )
+        )
 
     # Linter recommendations
     if linter == "flake8":
-        result.recommendations.append(Recommendation(
-            category=AuditCategory.TOOLING,
-            message="Consider migrating from flake8 to ruff for better performance",
-            severity=Severity.INFO,
-            action="pyhatch upgrade . (will migrate flake8 to ruff)",
-        ))
+        result.recommendations.append(
+            Recommendation(
+                category=AuditCategory.TOOLING,
+                message="Consider migrating from flake8 to ruff for better performance",
+                severity=Severity.INFO,
+                action="quickforge upgrade . (will migrate flake8 to ruff)",
+            )
+        )
     elif linter == "pylint":
-        result.recommendations.append(Recommendation(
-            category=AuditCategory.TOOLING,
-            message="Consider migrating from pylint to ruff for better performance",
-            severity=Severity.INFO,
-            action="pyhatch upgrade . (will migrate pylint to ruff)",
-        ))
+        result.recommendations.append(
+            Recommendation(
+                category=AuditCategory.TOOLING,
+                message="Consider migrating from pylint to ruff for better performance",
+                severity=Severity.INFO,
+                action="quickforge upgrade . (will migrate pylint to ruff)",
+            )
+        )
     elif linter is None and formatter != "ruff":
-        result.recommendations.append(Recommendation(
-            category=AuditCategory.TOOLING,
-            message="No linter detected. Consider adding ruff for code quality",
-            severity=Severity.WARNING,
-            action="pyhatch add pre-commit (includes ruff)",
-        ))
+        result.recommendations.append(
+            Recommendation(
+                category=AuditCategory.TOOLING,
+                message="No linter detected. Consider adding ruff for code quality",
+                severity=Severity.WARNING,
+                action="quickforge add pre-commit (includes ruff)",
+            )
+        )
 
     # Formatter recommendations
     if formatter == "black":
-        result.recommendations.append(Recommendation(
-            category=AuditCategory.TOOLING,
-            message="Consider migrating from black to ruff format for better performance",
-            severity=Severity.INFO,
-            action="pyhatch upgrade . (will migrate black to ruff)",
-        ))
+        result.recommendations.append(
+            Recommendation(
+                category=AuditCategory.TOOLING,
+                message="Consider migrating from black to ruff format for better performance",
+                severity=Severity.INFO,
+                action="quickforge upgrade . (will migrate black to ruff)",
+            )
+        )
     elif formatter == "autopep8":
-        result.recommendations.append(Recommendation(
-            category=AuditCategory.TOOLING,
-            message="Consider migrating from autopep8 to ruff format",
-            severity=Severity.INFO,
-        ))
+        result.recommendations.append(
+            Recommendation(
+                category=AuditCategory.TOOLING,
+                message="Consider migrating from autopep8 to ruff format",
+                severity=Severity.INFO,
+            )
+        )
     elif formatter == "yapf":
-        result.recommendations.append(Recommendation(
-            category=AuditCategory.TOOLING,
-            message="Consider migrating from yapf to ruff format",
-            severity=Severity.INFO,
-        ))
+        result.recommendations.append(
+            Recommendation(
+                category=AuditCategory.TOOLING,
+                message="Consider migrating from yapf to ruff format",
+                severity=Severity.INFO,
+            )
+        )
 
     # Import sorter recommendations
     if import_sorter == "isort":
-        result.recommendations.append(Recommendation(
-            category=AuditCategory.TOOLING,
-            message="Consider migrating from isort to ruff (handles import sorting)",
-            severity=Severity.INFO,
-            action="pyhatch upgrade . (will migrate isort to ruff)",
-        ))
+        result.recommendations.append(
+            Recommendation(
+                category=AuditCategory.TOOLING,
+                message="Consider migrating from isort to ruff (handles import sorting)",
+                severity=Severity.INFO,
+                action="quickforge upgrade . (will migrate isort to ruff)",
+            )
+        )
 
     # Type checker recommendations
     if type_checker == "mypy":
-        result.recommendations.append(Recommendation(
-            category=AuditCategory.TOOLING,
-            message="Consider migrating from mypy to basedpyright for stricter checking",
-            severity=Severity.INFO,
-            action="pyhatch upgrade . (will migrate mypy to basedpyright)",
-        ))
+        result.recommendations.append(
+            Recommendation(
+                category=AuditCategory.TOOLING,
+                message="Consider migrating from mypy to basedpyright for stricter checking",
+                severity=Severity.INFO,
+                action="quickforge upgrade . (will migrate mypy to basedpyright)",
+            )
+        )
     elif type_checker == "pytype":
-        result.recommendations.append(Recommendation(
-            category=AuditCategory.TOOLING,
-            message="Consider migrating from pytype to basedpyright",
-            severity=Severity.INFO,
-        ))
+        result.recommendations.append(
+            Recommendation(
+                category=AuditCategory.TOOLING,
+                message="Consider migrating from pytype to basedpyright",
+                severity=Severity.INFO,
+            )
+        )
     elif type_checker is None:
-        result.recommendations.append(Recommendation(
-            category=AuditCategory.TOOLING,
-            message="No type checker detected. Consider adding basedpyright",
-            severity=Severity.WARNING,
-        ))
+        result.recommendations.append(
+            Recommendation(
+                category=AuditCategory.TOOLING,
+                message="No type checker detected. Consider adding basedpyright",
+                severity=Severity.WARNING,
+            )
+        )
 
     # Pre-commit recommendations
     if not has_pre_commit:
-        result.recommendations.append(Recommendation(
-            category=AuditCategory.TOOLING,
-            message="No pre-commit hooks detected. Consider adding pre-commit",
-            severity=Severity.INFO,
-            action="pyhatch add pre-commit",
-        ))
+        result.recommendations.append(
+            Recommendation(
+                category=AuditCategory.TOOLING,
+                message="No pre-commit hooks detected. Consider adding pre-commit",
+                severity=Severity.INFO,
+                action="quickforge add pre-commit",
+            )
+        )
 
     # CI recommendations
     if ci_system is None:
-        result.recommendations.append(Recommendation(
-            category=AuditCategory.TOOLING,
-            message="No CI/CD configuration detected. Consider adding GitHub Actions",
-            severity=Severity.INFO,
-            action="pyhatch add github-actions",
-        ))
+        result.recommendations.append(
+            Recommendation(
+                category=AuditCategory.TOOLING,
+                message="No CI/CD configuration detected. Consider adding GitHub Actions",
+                severity=Severity.INFO,
+                action="quickforge add github-actions",
+            )
+        )
 
 
 def _generate_code_quality_recommendations(
@@ -690,26 +746,32 @@ def _generate_code_quality_recommendations(
         return
 
     if type_coverage < 25:
-        result.recommendations.append(Recommendation(
-            category=AuditCategory.CODE_QUALITY,
-            message=f"Low type annotation coverage ({type_coverage:.0f}%). "
-                    f"Only {typed_functions}/{total_functions} functions have type hints",
-            severity=Severity.WARNING,
-        ))
+        result.recommendations.append(
+            Recommendation(
+                category=AuditCategory.CODE_QUALITY,
+                message=f"Low type annotation coverage ({type_coverage:.0f}%). "
+                f"Only {typed_functions}/{total_functions} functions have type hints",
+                severity=Severity.WARNING,
+            )
+        )
     elif type_coverage < 50:
-        result.recommendations.append(Recommendation(
-            category=AuditCategory.CODE_QUALITY,
-            message=f"Moderate type annotation coverage ({type_coverage:.0f}%). "
-                    f"{typed_functions}/{total_functions} functions have type hints",
-            severity=Severity.INFO,
-        ))
+        result.recommendations.append(
+            Recommendation(
+                category=AuditCategory.CODE_QUALITY,
+                message=f"Moderate type annotation coverage ({type_coverage:.0f}%). "
+                f"{typed_functions}/{total_functions} functions have type hints",
+                severity=Severity.INFO,
+            )
+        )
     elif type_coverage < 80:
-        result.recommendations.append(Recommendation(
-            category=AuditCategory.CODE_QUALITY,
-            message=f"Good type annotation coverage ({type_coverage:.0f}%). "
-                    f"Consider improving to 80%+",
-            severity=Severity.INFO,
-        ))
+        result.recommendations.append(
+            Recommendation(
+                category=AuditCategory.CODE_QUALITY,
+                message=f"Good type annotation coverage ({type_coverage:.0f}%). "
+                f"Consider improving to 80%+",
+                severity=Severity.INFO,
+            )
+        )
 
 
 def _calculate_score(result: AuditResult) -> int:
@@ -732,6 +794,7 @@ def _calculate_score(result: AuditResult) -> int:
 # =============================================================================
 # Main Audit Function
 # =============================================================================
+
 
 def audit_project(path: Path) -> AuditResult:
     """
@@ -764,13 +827,13 @@ def audit_project(path: Path) -> AuditResult:
     result = AuditResult(project_path=path)
 
     # Detect tooling
-    pkg_manager, pkg_info = detect_package_manager(path)
-    linter, linter_info = detect_linter(path)
-    formatter, formatter_info = detect_formatter(path)
-    import_sorter, sorter_info = detect_import_sorter(path)
-    type_checker, tc_info = detect_type_checker(path)
+    pkg_manager, _pkg_info = detect_package_manager(path)
+    linter, _linter_info = detect_linter(path)
+    formatter, _formatter_info = detect_formatter(path)
+    import_sorter, _sorter_info = detect_import_sorter(path)
+    type_checker, _tc_info = detect_type_checker(path)
     has_pre_commit = detect_pre_commit(path)
-    ci_system, ci_info = detect_ci(path)
+    ci_system, _ci_info = detect_ci(path)
 
     # Record detected tools
     if pkg_manager:
@@ -794,10 +857,10 @@ def audit_project(path: Path) -> AuditResult:
 
     # Check if already using modern tooling
     is_modern = (
-        pkg_manager == "uv" and
-        linter == "ruff" and
-        type_checker in ("basedpyright", "pyright") and
-        has_pre_commit
+        pkg_manager == "uv"
+        and linter == "ruff"
+        and type_checker in ("basedpyright", "pyright")
+        and has_pre_commit
     )
 
     if is_modern:

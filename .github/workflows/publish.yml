@@ -1,14 +1,14 @@
 # =============================================================================
-# pyinit - PyPI Publishing Workflow
+# quickforge - PyPI Publishing Workflow
 # =============================================================================
 # This workflow automatically publishes to PyPI when a GitHub release is created.
 # It uses trusted publishing (OIDC) - no API tokens needed!
 #
 # Setup required:
-# 1. Go to PyPI → Your Projects → pyinit → Settings → Publishing
+# 1. Go to PyPI → Your Projects → quickforge → Settings → Publishing
 # 2. Add GitHub as a trusted publisher with:
 #    - Owner: Technical-1
-#    - Repository: pyinit
+#    - Repository: quickforge
 #    - Workflow: publish.yml
 # =============================================================================
 
@@ -60,7 +60,7 @@ jobs:
 
     environment:
       name: testpypi
-      url: https://test.pypi.org/p/pyinit
+      url: https://test.pypi.org/p/quickforge
 
     permissions:
       id-token: write
@@ -88,7 +88,7 @@ jobs:
 
     environment:
       name: pypi
-      url: https://pypi.org/p/pyinit
+      url: https://pypi.org/p/quickforge
 
     permissions:
       id-token: write

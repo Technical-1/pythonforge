@@ -1,5 +1,5 @@
 """
-pyhatch.generator - Core Project Generation Logic
+quickforge.generator - Core Project Generation Logic
 ==================================================
 
 This module contains the main logic for generating Python projects.
@@ -28,7 +28,7 @@ Templates are Jinja2 files in the `templates/` directory. Each template
 receives a context dict containing:
 
     - config: The ProjectConfig object
-    - pyhatch_version: Version of pyhatch for attribution
+    - quickforge_version: Version of quickforge for attribution
     - year: Current year for licenses
 
 File naming conventions:
@@ -38,8 +38,8 @@ File naming conventions:
 
 Usage Example
 -------------
->>> from pyhatch.generator import create_project
->>> from pyhatch.models import ProjectConfig, ProjectType
+>>> from quickforge.generator import create_project
+>>> from quickforge.models import ProjectConfig, ProjectType
 >>>
 >>> config = ProjectConfig(
 ...     name="myproject",
@@ -62,7 +62,7 @@ import os
 import shutil
 import subprocess
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -70,8 +70,8 @@ from jinja2 import Environment, PackageLoader, select_autoescape
 from rich.console import Console
 from rich.panel import Panel
 
-from pyhatch import __version__
-from pyhatch.models import (
+from quickforge import __version__
+from quickforge.models import (
     AuthorInfo,
     FeaturesConfig,
     License,
@@ -103,20 +103,16 @@ TEMPLATE_MAPPINGS: dict[str, tuple[str, Callable[[ProjectConfig], bool] | None]]
     "pyproject.toml.j2": ("pyproject.toml", None),
     "README.md.j2": ("README.md", None),
     "gitignore.j2": (".gitignore", None),
-
     # Package files
     "package_init.py.j2": ("{src_path}/__init__.py", None),
-
     # Conditional files based on project type
     "cli.py.j2": ("{src_path}/cli.py", lambda c: c.project_type == ProjectType.CLI),
     "main.py.j2": (
         "{src_path}/main.py",
         lambda c: c.project_type in {ProjectType.APP, ProjectType.API},
     ),
-
     # Test files
     "test_main.py.j2": ("tests/test_main.py", None),
-
     # Feature-based files
     "pre-commit-config.yaml.j2": (
         ".pre-commit-config.yaml",
@@ -146,6 +142,7 @@ LICENSE_TEMPLATES: dict[License, str] = {
 # =============================================================================
 # Result Data Classes
 # =============================================================================
+
 
 @dataclass
 class GenerationResult:
@@ -198,12 +195,13 @@ class GenerationResult:
 # Template Engine Setup
 # =============================================================================
 
+
 def create_jinja_env() -> Environment:
     """
     Create and configure the Jinja2 template environment.
 
     The environment is configured with:
-    - Package-based template loading from pyhatch.templates
+    - Package-based template loading from quickforge.templates
     - Autoescaping disabled (we're generating code, not HTML)
     - Trim blocks and lstrip_blocks for cleaner output
     - Custom filters for common transformations
@@ -220,10 +218,10 @@ def create_jinja_env() -> Environment:
     not to introduce injection vulnerabilities in user-facing strings.
     """
     env = Environment(
-        loader=PackageLoader("pyhatch", "templates"),
+        loader=PackageLoader("quickforge", "templates"),
         autoescape=select_autoescape([]),  # Disable for code generation
-        trim_blocks=True,      # Remove first newline after block tags
-        lstrip_blocks=True,    # Strip leading whitespace before block tags
+        trim_blocks=True,  # Remove first newline after block tags
+        lstrip_blocks=True,  # Strip leading whitespace before block tags
         keep_trailing_newline=True,  # Preserve trailing newlines in templates
     )
 
@@ -236,6 +234,7 @@ def create_jinja_env() -> Environment:
 # =============================================================================
 # Directory Structure Creation
 # =============================================================================
+
 
 def create_directory_structure(config: ProjectConfig) -> list[Path]:
     """
@@ -330,6 +329,7 @@ def create_directory_structure(config: ProjectConfig) -> list[Path]:
 # Template Rendering
 # =============================================================================
 
+
 def render_template(
     env: Environment,
     template_name: str,
@@ -365,7 +365,7 @@ def render_template(
     -----
     The template context includes:
     - config: The full ProjectConfig object
-    - pyhatch_version: For attribution in generated files
+    - quickforge_version: For attribution in generated files
     - year: Current year for license files
     """
     template = env.get_template(template_name)
@@ -373,8 +373,8 @@ def render_template(
     # Build template context
     context = {
         "config": config,
-        "pyhatch_version": __version__,
-        "year": datetime.now().year,
+        "quickforge_version": __version__,
+        "year": datetime.now(UTC).year,
     }
 
     return template.render(**context)
@@ -488,6 +488,7 @@ def render_all_templates(
 # File Writing
 # =============================================================================
 
+
 def write_files(
     project_dir: Path,
     files: dict[Path, str],
@@ -580,6 +581,7 @@ def create_test_init(config: ProjectConfig) -> None:
 # Git Initialization
 # =============================================================================
 
+
 def init_git_repository(project_dir: Path) -> bool:
     """
     Initialize a git repository in the project directory.
@@ -629,12 +631,17 @@ def init_git_repository(project_dir: Path) -> bool:
 
         # Create initial commit
         subprocess.run(
-            ["git", "commit", "-m", "Initial commit (generated by pyhatch)"],
+            ["git", "commit", "-m", "Initial commit (generated by quickforge)"],
             cwd=project_dir,
             capture_output=True,
             check=True,
-            env={**os.environ, "GIT_AUTHOR_NAME": "pyhatch", "GIT_AUTHOR_EMAIL": "pyhatch@example.com",
-                 "GIT_COMMITTER_NAME": "pyhatch", "GIT_COMMITTER_EMAIL": "pyhatch@example.com"},
+            env={
+                **os.environ,
+                "GIT_AUTHOR_NAME": "quickforge",
+                "GIT_AUTHOR_EMAIL": "quickforge@example.com",
+                "GIT_COMMITTER_NAME": "quickforge",
+                "GIT_COMMITTER_EMAIL": "quickforge@example.com",
+            },
         )
 
         return True
@@ -646,6 +653,7 @@ def init_git_repository(project_dir: Path) -> bool:
 # =============================================================================
 # Post-Creation Validation
 # =============================================================================
+
 
 def validate_project(config: ProjectConfig) -> tuple[bool, list[str]]:
     """
@@ -695,7 +703,8 @@ def validate_project(config: ProjectConfig) -> tuple[bool, list[str]]:
     if pyproject_path.exists():
         try:
             import tomli
-            with open(pyproject_path, "rb") as f:
+
+            with pyproject_path.open("rb") as f:
                 tomli.load(f)
         except Exception as e:
             issues.append(f"Invalid pyproject.toml: {e}")
@@ -715,6 +724,7 @@ def validate_project(config: ProjectConfig) -> tuple[bool, list[str]]:
 # =============================================================================
 # Main Generation Function
 # =============================================================================
+
 
 def create_project(
     config: ProjectConfig,
@@ -756,7 +766,7 @@ def create_project(
 
     Examples
     --------
-    >>> from pyhatch.models import ProjectConfig, ProjectType
+    >>> from quickforge.models import ProjectConfig, ProjectType
     >>> config = ProjectConfig(
     ...     name="myproject",
     ...     project_type=ProjectType.LIBRARY,
@@ -785,14 +795,16 @@ def create_project(
         # Display header
         if verbose:
             console.print()
-            console.print(Panel(
-                f"[bold blue]Creating project:[/] [green]{config.name}[/]\n"
-                f"[dim]Type: {config.project_type.value} | "
-                f"Python: {config.python_version.value} | "
-                f"License: {config.license.value}[/]",
-                title="[bold]pyhatch[/]",
-                border_style="blue",
-            ))
+            console.print(
+                Panel(
+                    f"[bold blue]Creating project:[/] [green]{config.name}[/]\n"
+                    f"[dim]Type: {config.project_type.value} | "
+                    f"Python: {config.python_version.value} | "
+                    f"License: {config.license.value}[/]",
+                    title="[bold]quickforge[/]",
+                    border_style="blue",
+                )
+            )
             console.print()
 
         # Step 1: Create directory structure
@@ -822,10 +834,14 @@ def create_project(
 
         # Step 4: Create additional files
         create_py_typed(config)
-        result.files_created.append(config.project_dir / config.get_src_path() / "py.typed")
+        result.files_created.append(
+            config.project_dir / config.get_src_path() / "py.typed"
+        )
 
         create_test_init(config)
-        result.files_created.append(config.project_dir / config.get_test_path() / "__init__.py")
+        result.files_created.append(
+            config.project_dir / config.get_test_path() / "__init__.py"
+        )
 
         if verbose:
             console.print(f"  Created {config.get_src_path()}/py.typed")
@@ -843,7 +859,9 @@ def create_project(
                 if verbose:
                     console.print("  [green]✓[/] Git repository initialized")
             else:
-                result.warnings.append("Git initialization failed (git may not be installed)")
+                result.warnings.append(
+                    "Git initialization failed (git may not be installed)"
+                )
                 if verbose:
                     console.print("  [yellow]⚠[/] Git initialization skipped")
 
@@ -870,16 +888,18 @@ def create_project(
 
         if verbose:
             console.print()
-            console.print(Panel(
-                f"[bold green]✨ Project created successfully![/]\n\n"
-                f"[dim]Location:[/] {config.project_dir}\n\n"
-                f"[bold]Next steps:[/]\n"
-                f"  cd {config.name}\n"
-                f"  uv sync\n"
-                f"  uv run pytest",
-                title="[bold green]Success[/]",
-                border_style="green",
-            ))
+            console.print(
+                Panel(
+                    f"[bold green]✨ Project created successfully![/]\n\n"
+                    f"[dim]Location:[/] {config.project_dir}\n\n"
+                    f"[bold]Next steps:[/]\n"
+                    f"  cd {config.name}\n"
+                    f"  uv sync\n"
+                    f"  uv run pytest",
+                    title="[bold green]Success[/]",
+                    border_style="green",
+                )
+            )
 
     except FileExistsError as e:
         result.errors.append(str(e))
@@ -964,7 +984,7 @@ def load_project_config(path: Path) -> ProjectConfig:
     if not pyproject_path.exists():
         raise FileNotFoundError(f"No pyproject.toml found at {path}")
 
-    with open(pyproject_path, "rb") as f:
+    with pyproject_path.open("rb") as f:
         data = tomllib.load(f)
 
     project = data.get("project", {})
@@ -993,7 +1013,11 @@ def load_project_config(path: Path) -> ProjectConfig:
 
     # Extract license
     license_info = project.get("license", {})
-    license_text = license_info.get("text", "MIT") if isinstance(license_info, dict) else str(license_info)
+    license_text = (
+        license_info.get("text", "MIT")
+        if isinstance(license_info, dict)
+        else str(license_info)
+    )
     try:
         license_enum = License(license_text)
     except ValueError:
@@ -1003,7 +1027,9 @@ def load_project_config(path: Path) -> ProjectConfig:
     authors = project.get("authors", [])
     if authors:
         author = authors[0]
-        author_name = author.get("name", "Unknown") if isinstance(author, dict) else str(author)
+        author_name = (
+            author.get("name", "Unknown") if isinstance(author, dict) else str(author)
+        )
         author_email = author.get("email") if isinstance(author, dict) else None
         author_info = AuthorInfo(name=author_name, email=author_email)
     else:
@@ -1012,7 +1038,9 @@ def load_project_config(path: Path) -> ProjectConfig:
     # Detect type checking mode
     basedpyright = tool.get("basedpyright", {})
     pyright = tool.get("pyright", {})
-    type_mode_str = basedpyright.get("typeCheckingMode") or pyright.get("typeCheckingMode", "standard")
+    type_mode_str = basedpyright.get("typeCheckingMode") or pyright.get(
+        "typeCheckingMode", "standard"
+    )
     try:
         type_mode = TypeCheckingMode(type_mode_str)
     except ValueError:
@@ -1094,8 +1122,7 @@ def add_feature_to_project(
 
         if existing:
             raise FileExistsError(
-                f"Files already exist: {', '.join(existing)}. "
-                f"Use --force to overwrite."
+                f"Files already exist: {', '.join(existing)}. Use --force to overwrite."
             )
 
     # Create Jinja environment
@@ -1104,8 +1131,8 @@ def add_feature_to_project(
     # Build context
     context = {
         "config": config,
-        "pyhatch_version": __version__,
-        "year": datetime.now().year,
+        "quickforge_version": __version__,
+        "year": datetime.now(UTC).year,
     }
 
     # Render and write templates
@@ -1130,6 +1157,6 @@ def add_feature_to_project(
             for f in created_files:
                 if f.exists():
                     f.unlink()
-            raise RuntimeError(f"Failed to create {output_path}: {e}")
+            raise RuntimeError(f"Failed to create {output_path}: {e}") from e
 
     return created_files

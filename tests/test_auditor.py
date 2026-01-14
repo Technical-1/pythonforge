@@ -1,10 +1,10 @@
-"""Tests for pyinit.auditor module."""
+"""Tests for quickforge.auditor module."""
 
 from pathlib import Path
 
 import pytest
 
-from pyhatch.auditor import (
+from quickforge.auditor import (
     AuditCategory,
     AuditResult,
     Recommendation,
@@ -13,7 +13,6 @@ from pyhatch.auditor import (
     audit_project,
     detect_ci,
     detect_formatter,
-    detect_import_sorter,
     detect_linter,
     detect_package_manager,
     detect_pre_commit,
@@ -46,13 +45,13 @@ class TestDetectPackageManager:
 name = "test"
 version = "0.1.0"
 """)
-        manager, info = detect_package_manager(tmp_path)
+        manager, _info = detect_package_manager(tmp_path)
         assert manager == "poetry"
 
     def test_detect_pipenv(self, tmp_path: Path) -> None:
         """Test detection of Pipenv."""
         (tmp_path / "Pipfile").touch()
-        manager, info = detect_package_manager(tmp_path)
+        manager, _info = detect_package_manager(tmp_path)
         assert manager == "pipenv"
 
     def test_detect_pip(self, tmp_path: Path) -> None:
@@ -65,7 +64,7 @@ version = "0.1.0"
     def test_detect_setuptools(self, tmp_path: Path) -> None:
         """Test detection of setuptools via setup.py."""
         (tmp_path / "setup.py").write_text("from setuptools import setup\nsetup()")
-        manager, info = detect_package_manager(tmp_path)
+        manager, _info = detect_package_manager(tmp_path)
         assert manager == "setuptools"
 
     def test_detect_none(self, tmp_path: Path) -> None:
@@ -85,25 +84,25 @@ class TestDetectLinter:
 [tool.ruff]
 line-length = 88
 """)
-        linter, info = detect_linter(tmp_path)
+        linter, _info = detect_linter(tmp_path)
         assert linter == "ruff"
 
     def test_detect_ruff_toml(self, tmp_path: Path) -> None:
         """Test detection of ruff via ruff.toml."""
         (tmp_path / "ruff.toml").write_text("line-length = 88")
-        linter, info = detect_linter(tmp_path)
+        linter, _info = detect_linter(tmp_path)
         assert linter == "ruff"
 
     def test_detect_flake8(self, tmp_path: Path) -> None:
         """Test detection of flake8."""
         (tmp_path / ".flake8").write_text("[flake8]\nmax-line-length = 88")
-        linter, info = detect_linter(tmp_path)
+        linter, _info = detect_linter(tmp_path)
         assert linter == "flake8"
 
     def test_detect_pylint(self, tmp_path: Path) -> None:
         """Test detection of pylint."""
         (tmp_path / ".pylintrc").touch()
-        linter, info = detect_linter(tmp_path)
+        linter, _info = detect_linter(tmp_path)
         assert linter == "pylint"
 
 
@@ -120,7 +119,7 @@ line-length = 88
 [tool.ruff.format]
 quote-style = "double"
 """)
-        formatter, info = detect_formatter(tmp_path)
+        formatter, _info = detect_formatter(tmp_path)
         assert formatter == "ruff"
 
     def test_detect_black(self, tmp_path: Path) -> None:
@@ -130,7 +129,7 @@ quote-style = "double"
 [tool.black]
 line-length = 88
 """)
-        formatter, info = detect_formatter(tmp_path)
+        formatter, _info = detect_formatter(tmp_path)
         assert formatter == "black"
 
 
@@ -144,19 +143,19 @@ class TestDetectTypeChecker:
 [tool.basedpyright]
 typeCheckingMode = "standard"
 """)
-        checker, info = detect_type_checker(tmp_path)
+        checker, _info = detect_type_checker(tmp_path)
         assert checker == "basedpyright"
 
     def test_detect_mypy(self, tmp_path: Path) -> None:
         """Test detection of mypy."""
         (tmp_path / "mypy.ini").write_text("[mypy]\nstrict = true")
-        checker, info = detect_type_checker(tmp_path)
+        checker, _info = detect_type_checker(tmp_path)
         assert checker == "mypy"
 
     def test_detect_pyright(self, tmp_path: Path) -> None:
         """Test detection of pyright."""
         (tmp_path / "pyrightconfig.json").write_text("{}")
-        checker, info = detect_type_checker(tmp_path)
+        checker, _info = detect_type_checker(tmp_path)
         assert checker == "pyright"
 
 
@@ -181,18 +180,18 @@ class TestDetectCI:
         workflows = tmp_path / ".github" / "workflows"
         workflows.mkdir(parents=True)
         (workflows / "ci.yml").touch()
-        ci, info = detect_ci(tmp_path)
+        ci, _info = detect_ci(tmp_path)
         assert ci == "github-actions"
 
     def test_detect_gitlab_ci(self, tmp_path: Path) -> None:
         """Test detection of GitLab CI."""
         (tmp_path / ".gitlab-ci.yml").touch()
-        ci, info = detect_ci(tmp_path)
+        ci, _info = detect_ci(tmp_path)
         assert ci == "gitlab-ci"
 
     def test_detect_no_ci(self, tmp_path: Path) -> None:
         """Test when no CI is configured."""
-        ci, info = detect_ci(tmp_path)
+        ci, _info = detect_ci(tmp_path)
         assert ci is None
 
 
@@ -328,7 +327,7 @@ class TestAuditResult:
     def test_severity_counts(self) -> None:
         """Test severity count properties."""
         result = AuditResult(
-            project_path=Path("."),
+            project_path=Path(),
             recommendations=[
                 Recommendation(AuditCategory.TOOLING, "test1", Severity.CRITICAL),
                 Recommendation(AuditCategory.TOOLING, "test2", Severity.CRITICAL),

@@ -1,15 +1,15 @@
-"""Tests for pyinit add command and add_feature_to_project function."""
+"""Tests for quickforge add command and add_feature_to_project function."""
 
 from pathlib import Path
 
 import pytest
 
-from pyhatch.generator import (
+from quickforge.generator import (
     FEATURE_TEMPLATES,
     add_feature_to_project,
     load_project_config,
 )
-from pyhatch.models import ProjectType
+from quickforge.models import ProjectType
 
 
 class TestLoadProjectConfig:
@@ -108,7 +108,9 @@ class TestFeatureTemplates:
         for feature, templates in FEATURE_TEMPLATES.items():
             assert len(templates) > 0, f"{feature} has no templates"
             for template_name, output_path in templates:
-                assert template_name.endswith(".j2"), f"{template_name} should end with .j2"
+                assert template_name.endswith(".j2"), (
+                    f"{template_name} should end with .j2"
+                )
                 assert output_path, f"{feature} has empty output path"
 
 

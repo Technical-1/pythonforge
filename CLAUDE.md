@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-**pyhatch** is a Python CLI tool that bootstraps production-ready Python projects with modern 2025 tooling (uv, ruff, basedpyright, pytest, pre-commit). It generates complete project structures with a single command.
+**quickforge** is a Python CLI tool that bootstraps production-ready Python projects with modern 2025 tooling (uv, ruff, basedpyright, pytest, pre-commit). It generates complete project structures with a single command.
 
 ## Commands
 
 ```bash
 # Install dependencies
-uv sync --dev
+uv sync --all-extras
 
 # Run tests (with coverage)
 uv run pytest
@@ -31,13 +31,13 @@ uv run basedpyright
 
 # Install CLI locally for testing
 uv pip install -e .
-pyhatch new testproject --type cli --yes
+quickforge new testproject --type cli --yes
 ```
 
 ## Architecture
 
 ```
-src/pyhatch/
+src/quickforge/
 ├── cli.py          # Typer CLI app - commands: new, audit, upgrade, add
 ├── models.py       # Pydantic models - ProjectConfig, enums, validation
 ├── generator.py    # Core logic - template rendering, file writing, git init, add_feature
@@ -55,11 +55,12 @@ src/pyhatch/
 ### Template System
 
 Templates in `templates/` use Jinja2 with:
-- Context: `config` (ProjectConfig), `pyhatch_version`, `year`
+- Context: `config` (ProjectConfig), `quickforge_version`, `year`
 - Naming: `foo.j2` → `foo` (special: `gitignore.j2` → `.gitignore`)
 - Conditionals: Some templates only render based on project type/features
+- License files handled separately via `LICENSE_TEMPLATES` dict
 
-Template mappings are defined in `generator.py:TEMPLATE_MAPPINGS`.
+Template mappings are defined in `generator.py:TEMPLATE_MAPPINGS`. Each mapping has a condition function that determines whether to render based on `ProjectConfig`.
 
 ### Project Types
 
@@ -78,35 +79,4 @@ Tests use pytest with fixtures in `conftest.py`:
 - `sample_pyproject` - sample TOML content
 - `sample_python_file` - sample Python code
 
-Coverage requirement: 80% minimum (configured in pyproject.toml).
-
-## Implementation Status
-
-- **Phase 1-2 (Complete)**: `new` command fully functional
-- **Phase 3 (Complete)**: `audit`, `upgrade`, `add` commands fully implemented
-
-### Phase 3 Commands
-
-**`pyhatch audit`** - Analyze existing Python projects:
-- Detects package manager (uv, poetry, pip, pipenv, setuptools)
-- Detects linter, formatter, type checker, CI system
-- Analyzes type annotation coverage
-- Generates recommendations with severity levels
-- Calculates project health score (0-100)
-
-**`pyhatch upgrade`** - Migrate to modern tooling:
-- Migrates poetry → uv (converts pyproject.toml)
-- Migrates pip/requirements.txt → uv
-- Migrates black/isort/flake8 → ruff
-- Migrates mypy → basedpyright
-- Supports `--dry-run` and `--no-backup` flags
-- Creates timestamped backups
-
-**`pyhatch add`** - Add features to existing projects:
-- `github-actions` - CI/CD workflow
-- `docker` - Dockerfile and docker-compose.yml
-- `docs` - MkDocs documentation setup
-- `pre-commit` - Pre-commit hooks
-- `vscode` - VS Code settings and extensions
-- `devcontainer` - Dev container configuration
-- Supports `--force` to overwrite existing files
+Coverage requirement: 80% minimum (configured in pyproject.toml)

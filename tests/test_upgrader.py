@@ -1,10 +1,8 @@
-"""Tests for pyinit.upgrader module."""
+"""Tests for quickforge.upgrader module."""
 
 from pathlib import Path
 
-import pytest
-
-from pyhatch.upgrader import (
+from quickforge.upgrader import (
     MigrationStep,
     MigrationType,
     SourceTool,
@@ -60,7 +58,7 @@ class TestCreateBackup:
         backup_path = create_backup(tmp_path)
 
         assert backup_path.exists()
-        assert backup_path.name.startswith(".pyinit_backup_")
+        assert backup_path.name.startswith(".quickforge_backup_")
         assert (backup_path / "pyproject.toml").exists()
         assert (backup_path / "requirements.txt").exists()
 
@@ -130,7 +128,9 @@ typeCheckingMode = "standard"
         steps = create_migration_plan(tmp_path)
 
         # Should have no package manager migration (already using uv)
-        pkg_steps = [s for s in steps if s.migration_type == MigrationType.PACKAGE_MANAGER]
+        pkg_steps = [
+            s for s in steps if s.migration_type == MigrationType.PACKAGE_MANAGER
+        ]
         assert len(pkg_steps) == 0
 
 
@@ -202,7 +202,7 @@ version = "0.1.0"
         pyproject.write_text(original_content)
         (tmp_path / "poetry.lock").touch()
 
-        result = upgrade_project(tmp_path, dry_run=True)
+        upgrade_project(tmp_path, dry_run=True)
 
         # File should be unchanged
         assert pyproject.read_text() == original_content
@@ -291,7 +291,10 @@ typeCheckingMode = "standard"
         result = upgrade_project(tmp_path, backup=False)
 
         assert result.success
-        assert "No migrations needed" in result.changes_made[0] or len(result.migration_steps) == 0
+        assert (
+            "No migrations needed" in result.changes_made[0]
+            or len(result.migration_steps) == 0
+        )
 
 
 class TestMigrationStep:
@@ -320,7 +323,7 @@ class TestUpgradeResult:
         """Test creating an upgrade result."""
         result = UpgradeResult(
             success=True,
-            project_path=Path("."),
+            project_path=Path(),
             changes_made=["Change 1", "Change 2"],
             backup_path=Path(".backup"),
         )

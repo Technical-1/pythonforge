@@ -1,8 +1,8 @@
 """
-pyhatch.models - Pydantic Models for Project Configuration
+quickforge.models - Pydantic Models for Project Configuration
 ==========================================================
 
-This module defines all the data models used throughout pyhatch. We use Pydantic
+This module defines all the data models used throughout quickforge. We use Pydantic
 for several key benefits:
 
 1. **Validation**: Automatic validation of user input with clear error messages
@@ -29,7 +29,7 @@ The models are organized in a hierarchy:
 
 Usage Example
 -------------
->>> from pyhatch.models import ProjectConfig, ProjectType
+>>> from quickforge.models import ProjectConfig, ProjectType
 >>> config = ProjectConfig(
 ...     name="myproject",
 ...     project_type=ProjectType.LIBRARY,
@@ -52,6 +52,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 # =============================================================================
 # Enumerations
 # =============================================================================
+
 
 class ProjectType(str, Enum):
     """
@@ -239,12 +240,13 @@ class TypeCheckingMode(str, Enum):
 # Configuration Sub-Models
 # =============================================================================
 
+
 class ToolingConfig(BaseModel):
     """
     Configuration for development tools.
 
     This model defines which tools are used for linting, formatting,
-    and type checking. While pyhatch defaults to modern 2025 tools,
+    and type checking. While quickforge defaults to modern 2025 tools,
     this allows customization for teams with existing preferences.
 
     Attributes
@@ -267,7 +269,7 @@ class ToolingConfig(BaseModel):
     >>> config = ToolingConfig()
     >>> config.linter
     'ruff'
-    >>> config = ToolingConfig(type_checker='mypy')
+    >>> config = ToolingConfig(type_checker="mypy")
     >>> config.type_checker
     'mypy'
     """
@@ -375,10 +377,7 @@ class FeaturesConfig(BaseModel):
         list[str]
             Names of features set to True.
         """
-        return [
-            name for name, value in self.model_dump().items()
-            if value is True
-        ]
+        return [name for name, value in self.model_dump().items() if value is True]
 
 
 class AuthorInfo(BaseModel):
@@ -398,7 +397,7 @@ class AuthorInfo(BaseModel):
 
     Note
     ----
-    If email is not provided, pyhatch will attempt to read from
+    If email is not provided, quickforge will attempt to read from
     git config during project creation.
     """
 
@@ -436,9 +435,10 @@ class AuthorInfo(BaseModel):
 # Main Configuration Model
 # =============================================================================
 
+
 class ProjectConfig(BaseModel):
     """
-    Complete configuration for a pyhatch project.
+    Complete configuration for a quickforge project.
 
     This is the main model that holds all settings for project generation.
     It combines project metadata, tooling preferences, and feature flags
@@ -446,7 +446,7 @@ class ProjectConfig(BaseModel):
 
     The configuration can be:
     - Built interactively via CLI prompts
-    - Loaded from a pyhatch.toml file
+    - Loaded from a quickforge.toml file
     - Constructed programmatically via the Python API
 
     Attributes
@@ -500,11 +500,14 @@ class ProjectConfig(BaseModel):
     # -------------------------------------------------------------------------
     # Required Fields
     # -------------------------------------------------------------------------
-    name: Annotated[str, Field(
-        description="Project name (used in pyproject.toml)",
-        min_length=1,
-        max_length=100,
-    )]
+    name: Annotated[
+        str,
+        Field(
+            description="Project name (used in pyproject.toml)",
+            min_length=1,
+            max_length=100,
+        ),
+    ]
 
     # -------------------------------------------------------------------------
     # Fields with Defaults
@@ -586,14 +589,46 @@ class ProjectConfig(BaseModel):
 
         # Check against Python reserved words
         reserved = {
-            "and", "as", "assert", "async", "await", "break", "class",
-            "continue", "def", "del", "elif", "else", "except", "finally",
-            "for", "from", "global", "if", "import", "in", "is", "lambda",
-            "nonlocal", "not", "or", "pass", "raise", "return", "try",
-            "while", "with", "yield", "True", "False", "None",
+            "and",
+            "as",
+            "assert",
+            "async",
+            "await",
+            "break",
+            "class",
+            "continue",
+            "def",
+            "del",
+            "elif",
+            "else",
+            "except",
+            "finally",
+            "for",
+            "from",
+            "global",
+            "if",
+            "import",
+            "in",
+            "is",
+            "lambda",
+            "nonlocal",
+            "not",
+            "or",
+            "pass",
+            "raise",
+            "return",
+            "try",
+            "while",
+            "with",
+            "yield",
+            "True",
+            "False",
+            "None",
         }
         if v in reserved:
-            msg = f"'{v}' is a Python reserved word and cannot be used as a project name."
+            msg = (
+                f"'{v}' is a Python reserved word and cannot be used as a project name."
+            )
             raise ValueError(msg)
 
         return v
@@ -699,7 +734,7 @@ class ProjectConfig(BaseModel):
         """
         Convert config to a dictionary suitable for TOML serialization.
 
-        This is used when saving the configuration to a pyhatch.toml file
+        This is used when saving the configuration to a quickforge.toml file
         for later reference or modification.
 
         Returns
@@ -736,7 +771,7 @@ class ProjectConfig(BaseModel):
         """
         import tomli
 
-        with open(path, "rb") as f:
+        with path.open("rb") as f:
             data = tomli.load(f)
 
         return cls(**data)

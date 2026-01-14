@@ -1,8 +1,8 @@
 """
-pyhatch.cli - Command Line Interface
+quickforge.cli - Command Line Interface
 ====================================
 
-This module provides the command-line interface for pyhatch using Typer.
+This module provides the command-line interface for quickforge using Typer.
 Typer was chosen for its excellent type hint integration, automatic help
 generation, and rich terminal output support.
 
@@ -22,14 +22,14 @@ scriptable (with flags). The --yes flag skips all prompts for CI usage.
 Usage Examples
 --------------
 Interactive mode (prompts for options):
-    $ pyhatch new myproject
+    $ quickforge new myproject
 
 Non-interactive mode (all options specified):
-    $ pyhatch new myproject --type cli --python 3.12 --yes
+    $ quickforge new myproject --type cli --python 3.12 --yes
 
 Show help:
-    $ pyhatch --help
-    $ pyhatch new --help
+    $ quickforge --help
+    $ quickforge new --help
 
 See Also
 --------
@@ -49,11 +49,14 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from pyhatch import __version__
-from pyhatch.auditor import AuditCategory, Severity, audit_project
-from pyhatch.generator import FEATURE_TEMPLATES, add_feature_to_project, create_project
-from pyhatch.upgrader import create_migration_plan, upgrade_project
-from pyhatch.models import (
+from quickforge import __version__
+from quickforge.auditor import Severity, audit_project
+from quickforge.generator import (
+    FEATURE_TEMPLATES,
+    add_feature_to_project,
+    create_project,
+)
+from quickforge.models import (
     AuthorInfo,
     FeaturesConfig,
     License,
@@ -63,6 +66,7 @@ from pyhatch.models import (
     ToolingConfig,
     TypeCheckingMode,
 )
+from quickforge.upgrader import create_migration_plan, upgrade_project
 
 
 # =============================================================================
@@ -71,7 +75,7 @@ from pyhatch.models import (
 
 # Create the main Typer application
 app = typer.Typer(
-    name="pyhatch",
+    name="quickforge",
     help="Modern Python project bootstrapper with 2025's best toolchain.",
     no_args_is_help=True,
     rich_markup_mode="rich",
@@ -86,11 +90,12 @@ console = Console()
 # Version Callback
 # =============================================================================
 
+
 def version_callback(value: bool) -> None:
     """
     Display version information and exit.
 
-    Shows the pyhatch version along with information about the
+    Shows the quickforge version along with information about the
     toolchain versions it uses.
 
     Parameters
@@ -99,18 +104,21 @@ def version_callback(value: bool) -> None:
         True if --version was passed.
     """
     if value:
-        console.print(Panel(
-            f"[bold green]pyhatch[/] version [cyan]{__version__}[/]\n\n"
-            f"[dim]Modern Python project bootstrapper[/]\n"
-            f"[dim]Toolchain: uv + ruff + basedpyright + pytest[/]",
-            border_style="green",
-        ))
+        console.print(
+            Panel(
+                f"[bold green]quickforge[/] version [cyan]{__version__}[/]\n\n"
+                f"[dim]Modern Python project bootstrapper[/]\n"
+                f"[dim]Toolchain: uv + ruff + basedpyright + pytest[/]",
+                border_style="green",
+            )
+        )
         raise typer.Exit()
 
 
 # =============================================================================
 # Interactive Prompts
 # =============================================================================
+
 
 def prompt_project_type() -> ProjectType:
     """
@@ -222,7 +230,8 @@ def prompt_author() -> AuthorInfo:
     try:
         result = subprocess.run(
             ["git", "config", "user.name"],
-            check=False, capture_output=True,
+            check=False,
+            capture_output=True,
             text=True,
         )
         if result.returncode == 0 and result.stdout.strip():
@@ -230,7 +239,8 @@ def prompt_author() -> AuthorInfo:
 
         result = subprocess.run(
             ["git", "config", "user.email"],
-            check=False, capture_output=True,
+            check=False,
+            capture_output=True,
             text=True,
         )
         if result.returncode == 0 and result.stdout.strip():
@@ -269,7 +279,9 @@ def prompt_features() -> FeaturesConfig:
     features = questionary.checkbox(
         "Include optional features:",
         choices=[
-            questionary.Choice("GitHub Actions CI/CD", value="github_actions", checked=True),
+            questionary.Choice(
+                "GitHub Actions CI/CD", value="github_actions", checked=True
+            ),
             questionary.Choice("Pre-commit hooks", value="pre_commit", checked=True),
             questionary.Choice("VS Code settings", value="vscode", checked=True),
             questionary.Choice("Docker configuration", value="docker", checked=False),
@@ -351,6 +363,7 @@ def prompt_type_checking_mode() -> TypeCheckingMode:
 # Main Application Callback
 # =============================================================================
 
+
 @app.callback()
 def main(
     version: Annotated[
@@ -365,18 +378,18 @@ def main(
     ] = None,
 ) -> None:
     """
-    [bold]pyhatch[/] - Modern Python project bootstrapper.
+    [bold]quickforge[/] - Modern Python project bootstrapper.
 
     Create production-ready Python projects with 2025's best toolchain:
     [cyan]uv[/] + [cyan]ruff[/] + [cyan]basedpyright[/] + [cyan]pytest[/]
 
     [bold]Quick Start:[/]
 
-        pyhatch new myproject
+        quickforge new myproject
 
     [bold]Non-interactive:[/]
 
-        pyhatch new myproject --type cli --python 3.12 --yes
+        quickforge new myproject --type cli --python 3.12 --yes
     """
     pass
 
@@ -384,6 +397,7 @@ def main(
 # =============================================================================
 # New Command - Create a New Project
 # =============================================================================
+
 
 @app.command()
 def new(
@@ -537,16 +551,16 @@ def new(
     [bold]Examples:[/]
 
         # Interactive mode (prompts for all options)
-        pyhatch new myproject
+        quickforge new myproject
 
         # Quick library with defaults
-        pyhatch new mylib --type library --yes
+        quickforge new mylib --type library --yes
 
         # CLI tool with strict type checking
-        pyhatch new mycli --type cli --strict
+        quickforge new mycli --type cli --strict
 
         # API project with Docker
-        pyhatch new myapi --type api --with-docker
+        quickforge new myapi --type api --with-docker
     """
     # Determine if we should prompt for missing values
     should_prompt = interactive or (not yes and project_type is None)
@@ -558,8 +572,10 @@ def new(
             resolved_type = ProjectType(project_type.lower())
         except ValueError:
             valid = ", ".join(pt.value for pt in ProjectType)
-            rprint(f"[red]Error:[/] Invalid project type '{project_type}'. Valid: {valid}")
-            raise typer.Exit(1)
+            rprint(
+                f"[red]Error:[/] Invalid project type '{project_type}'. Valid: {valid}"
+            )
+            raise typer.Exit(1) from None
     elif should_prompt:
         resolved_type = prompt_project_type()
     else:
@@ -573,7 +589,7 @@ def new(
         except ValueError:
             valid = ", ".join(pv.value for pv in PythonVersion)
             rprint(f"[red]Error:[/] Invalid Python version '{python}'. Valid: {valid}")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
     elif should_prompt:
         resolved_python = prompt_python_version()
     else:
@@ -587,7 +603,7 @@ def new(
         except ValueError:
             valid = ", ".join(lic.value for lic in License)
             rprint(f"[red]Error:[/] Invalid license '{license_}'. Valid: {valid}")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
     elif should_prompt:
         resolved_license = prompt_license()
     else:
@@ -651,7 +667,7 @@ def new(
         )
     except ValueError as e:
         rprint(f"[red]Error:[/] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     # Show configuration summary if in interactive mode
     if should_prompt and not yes:
@@ -671,7 +687,9 @@ def new(
         console.print(table)
         console.print()
 
-        if not questionary.confirm("Create project with these settings?", default=True).ask():
+        if not questionary.confirm(
+            "Create project with these settings?", default=True
+        ).ask():
             raise typer.Abort()
 
     # Create the project
@@ -687,15 +705,16 @@ def new(
             raise typer.Exit(1)
 
     except FileExistsError:
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     except Exception as e:
         rprint(f"[red]Error:[/] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 # =============================================================================
 # Audit Command (Phase 3 - Placeholder)
 # =============================================================================
+
 
 @app.command()
 def audit(
@@ -707,7 +726,7 @@ def audit(
             file_okay=False,
             dir_okay=True,
         ),
-    ] = Path("."),
+    ] = Path(),
 ) -> None:
     """
     Audit an existing project for improvements.
@@ -721,17 +740,17 @@ def audit(
 
     [bold]Example:[/]
 
-        pyhatch audit ./myproject
-        pyhatch audit .
+        quickforge audit ./myproject
+        quickforge audit .
     """
     try:
         result = audit_project(path)
     except FileNotFoundError as e:
         rprint(f"[red]Error:[/] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     except NotADirectoryError as e:
         rprint(f"[red]Error:[/] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     # Display project path
     console.print()
@@ -767,12 +786,16 @@ def audit(
         console.print()
 
     # Display score
-    score_color = "green" if result.score >= 80 else "yellow" if result.score >= 60 else "red"
-    console.print(Panel(
-        f"[bold {score_color}]{result.score}/100[/]",
-        title="[bold]Project Health Score[/]",
-        border_style=score_color,
-    ))
+    score_color = (
+        "green" if result.score >= 80 else "yellow" if result.score >= 60 else "red"
+    )
+    console.print(
+        Panel(
+            f"[bold {score_color}]{result.score}/100[/]",
+            title="[bold]Project Health Score[/]",
+            border_style=score_color,
+        )
+    )
     console.print()
 
     # Display recommendations
@@ -790,7 +813,9 @@ def audit(
             Severity.WARNING: 2,
             Severity.INFO: 3,
         }
-        sorted_recs = sorted(result.recommendations, key=lambda r: severity_order[r.severity])
+        sorted_recs = sorted(
+            result.recommendations, key=lambda r: severity_order[r.severity]
+        )
 
         for rec in sorted_recs:
             severity_colors = {
@@ -810,12 +835,14 @@ def audit(
 
         console.print(rec_table)
     else:
-        console.print(Panel(
-            "[bold green]Your project is already using modern tooling![/]\n\n"
-            "No recommendations at this time.",
-            title="[bold]All Good[/]",
-            border_style="green",
-        ))
+        console.print(
+            Panel(
+                "[bold green]Your project is already using modern tooling![/]\n\n"
+                "No recommendations at this time.",
+                title="[bold]All Good[/]",
+                border_style="green",
+            )
+        )
 
     # Summary
     if result.recommendations:
@@ -832,12 +859,13 @@ def audit(
 
         console.print(f"[bold]Summary:[/] {', '.join(summary_parts)}")
         console.print()
-        console.print("[dim]Run 'pyhatch upgrade .' to apply recommended changes[/]")
+        console.print("[dim]Run 'quickforge upgrade .' to apply recommended changes[/]")
 
 
 # =============================================================================
 # Upgrade Command (Phase 3 - Placeholder)
 # =============================================================================
+
 
 @app.command()
 def upgrade(
@@ -849,7 +877,7 @@ def upgrade(
             file_okay=False,
             dir_okay=True,
         ),
-    ] = Path("."),
+    ] = Path(),
     from_tool: Annotated[
         str | None,
         typer.Option(
@@ -874,7 +902,8 @@ def upgrade(
     yes: Annotated[
         bool,
         typer.Option(
-            "--yes", "-y",
+            "--yes",
+            "-y",
             help="Skip confirmation prompt",
         ),
     ] = False,
@@ -891,9 +920,9 @@ def upgrade(
 
     [bold]Examples:[/]
 
-        pyhatch upgrade .
-        pyhatch upgrade . --from poetry
-        pyhatch upgrade ./myproject --dry-run
+        quickforge upgrade .
+        quickforge upgrade . --from poetry
+        quickforge upgrade ./myproject --dry-run
     """
     console.print()
 
@@ -905,13 +934,15 @@ def upgrade(
     steps = create_migration_plan(path, from_tool)
 
     if not steps:
-        console.print(Panel(
-            "[green]No migrations needed![/]\n\n"
-            "Your project may already be using modern tooling.\n"
-            "Run 'pyhatch audit .' to check.",
-            title="[bold]All Good[/]",
-            border_style="green",
-        ))
+        console.print(
+            Panel(
+                "[green]No migrations needed![/]\n\n"
+                "Your project may already be using modern tooling.\n"
+                "Run 'quickforge audit .' to check.",
+                title="[bold]All Good[/]",
+                border_style="green",
+            )
+        )
         return
 
     # Display migration plan
@@ -937,12 +968,14 @@ def upgrade(
         return
 
     # Confirm before proceeding
-    if not yes:
-        if not questionary.confirm(
+    if (
+        not yes
+        and not questionary.confirm(
             "Proceed with migration?",
             default=True,
-        ).ask():
-            raise typer.Abort()
+        ).ask()
+    ):
+        raise typer.Abort()
 
     console.print()
 
@@ -980,28 +1013,33 @@ def upgrade(
         console.print()
 
     if result.success:
-        console.print(Panel(
-            "[bold green]Upgrade complete![/]\n\n"
-            "Next steps:\n"
-            "1. Run 'uv sync' to install dependencies\n"
-            "2. Run 'uv run ruff check .' to lint\n"
-            "3. Run 'uv run basedpyright' to type check",
-            title="[bold]Success[/]",
-            border_style="green",
-        ))
+        console.print(
+            Panel(
+                "[bold green]Upgrade complete![/]\n\n"
+                "Next steps:\n"
+                "1. Run 'uv sync' to install dependencies\n"
+                "2. Run 'uv run ruff check .' to lint\n"
+                "3. Run 'uv run basedpyright' to type check",
+                title="[bold]Success[/]",
+                border_style="green",
+            )
+        )
     else:
-        console.print(Panel(
-            "[bold red]Upgrade completed with errors[/]\n\n"
-            f"Check the backup at {result.backup_path} if you need to restore.",
-            title="[bold]Partial Success[/]",
-            border_style="yellow",
-        ))
+        console.print(
+            Panel(
+                "[bold red]Upgrade completed with errors[/]\n\n"
+                f"Check the backup at {result.backup_path} if you need to restore.",
+                title="[bold]Partial Success[/]",
+                border_style="yellow",
+            )
+        )
         raise typer.Exit(1)
 
 
 # =============================================================================
 # Add Command (Phase 3 - Placeholder)
 # =============================================================================
+
 
 @app.command()
 def add(
@@ -1021,7 +1059,7 @@ def add(
             file_okay=False,
             dir_okay=True,
         ),
-    ] = Path("."),
+    ] = Path(),
     force: Annotated[
         bool,
         typer.Option(
@@ -1045,9 +1083,9 @@ def add(
 
     [bold]Examples:[/]
 
-        pyhatch add github-actions
-        pyhatch add docker --path ./myproject
-        pyhatch add docs --force
+        quickforge add github-actions
+        quickforge add docker --path ./myproject
+        quickforge add docs --force
     """
     # Validate feature
     if feature not in FEATURE_TEMPLATES:
@@ -1062,7 +1100,7 @@ def add(
     # Check for pyproject.toml
     if not (path / "pyproject.toml").exists():
         rprint(f"[red]Error:[/] No pyproject.toml found at {path}")
-        rprint("[dim]Run 'pyhatch new' to create a new project first.[/]")
+        rprint("[dim]Run 'quickforge new' to create a new project first.[/]")
         raise typer.Exit(1)
 
     console.print()
@@ -1092,13 +1130,15 @@ def add(
     try:
         created_files = add_feature_to_project(path, feature, force=force)
 
-        console.print(Panel(
-            f"[bold green]Added {feature}![/]\n\n"
-            f"Created {len(created_files)} file(s):\n" +
-            "\n".join(f"  - {f.relative_to(path)}" for f in created_files),
-            title="[bold]Success[/]",
-            border_style="green",
-        ))
+        console.print(
+            Panel(
+                f"[bold green]Added {feature}![/]\n\n"
+                f"Created {len(created_files)} file(s):\n"
+                + "\n".join(f"  - {f.relative_to(path)}" for f in created_files),
+                title="[bold]Success[/]",
+                border_style="green",
+            )
+        )
 
         # Show next steps based on feature
         if feature == "docker":
@@ -1124,13 +1164,13 @@ def add(
 
     except FileExistsError as e:
         rprint(f"[red]Error:[/] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     except FileNotFoundError as e:
         rprint(f"[red]Error:[/] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     except Exception as e:
         rprint(f"[red]Error:[/] {e}")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 # =============================================================================

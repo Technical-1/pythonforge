@@ -1,5 +1,5 @@
 """
-pytest configuration and shared fixtures for pyinit tests.
+pytest configuration and shared fixtures for quickforge tests.
 
 This module provides fixtures and configuration used across all test modules.
 Fixtures defined here are automatically available to all tests.
@@ -13,18 +13,19 @@ sample_pyproject : str
     A sample pyproject.toml content for testing.
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 
 @pytest.fixture
 def temp_project_dir(tmp_path: Path) -> Path:
     """
     Create a temporary directory for project creation tests.
-    
+
     This fixture provides a clean temporary directory for each test.
     The directory is automatically cleaned up after the test completes.
-    
+
     Yields
     ------
     Path
@@ -39,13 +40,13 @@ def temp_project_dir(tmp_path: Path) -> Path:
 def sample_pyproject() -> str:
     """
     Provide sample pyproject.toml content for testing.
-    
+
     Returns
     -------
     str
         A minimal but valid pyproject.toml content.
     """
-    return '''
+    return """
 [project]
 name = "sample-project"
 version = "0.1.0"
@@ -55,14 +56,14 @@ requires-python = ">=3.11"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-'''
+"""
 
 
 @pytest.fixture
 def sample_python_file() -> str:
     """
     Provide sample Python file content for testing.
-    
+
     Returns
     -------
     str
@@ -84,10 +85,11 @@ if __name__ == "__main__":
 # pytest Configuration
 # =============================================================================
 
+
 def pytest_configure(config: pytest.Config) -> None:
     """
     Configure pytest with custom markers.
-    
+
     This function is called by pytest during startup to register
     custom markers used in our test suite.
     """

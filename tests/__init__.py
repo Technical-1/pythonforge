@@ -1,8 +1,8 @@
 """
-pyinit test suite
-=================
+quickforge test suite
+==================
 
-This package contains comprehensive tests for pyinit.
+This package contains comprehensive tests for quickforge.
 
 Test Modules
 ------------
@@ -16,7 +16,7 @@ Running Tests
     pytest
 
     # Run with coverage
-    pytest --cov=src/pyinit
+    pytest --cov=src/quickforge
 
     # Run specific module
     pytest tests/test_models.py

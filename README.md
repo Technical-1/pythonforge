@@ -1,4 +1,4 @@
-# pyhatch
+# quickforge
 
 > Modern Python project bootstrapper with 2025's best toolchain
 
@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-**pyhatch** creates production-ready Python projects with zero configuration. One command gives you a complete project with modern tooling:
+**quickforge** creates production-ready Python projects with zero configuration. One command gives you a complete project with modern tooling:
 
 - ⚡ **[uv](https://docs.astral.sh/uv/)** - Blazing fast package manager (10-100x faster than pip)
 - 🧹 **[ruff](https://docs.astral.sh/ruff/)** - Linting and formatting (replaces black, isort, flake8)
@@ -18,23 +18,23 @@
 
 ```bash
 # Using uv (recommended)
-uv tool install pyhatch
+uv tool install quickforge
 
 # Using pip
-pip install pyhatch
+pip install quickforge
 
 # Using pipx
-pipx install pyhatch
+pipx install quickforge
 ```
 
 ## Quick Start
 
 ```bash
 # Create a new project interactively
-pyhatch new myproject
+quickforge new myproject
 
 # Create with options (non-interactive)
-pyhatch new myproject --type cli --python 3.12 --yes
+quickforge new myproject --type cli --python 3.12 --yes
 ```
 
 That's it! Your project is ready with:
@@ -48,7 +48,7 @@ That's it! Your project is ready with:
 
 ## Project Types
 
-pyhatch supports different project types optimized for their use case:
+quickforge supports different project types optimized for their use case:
 
 | Type | Description | Entry Point |
 |------|-------------|-------------|
@@ -88,7 +88,7 @@ myproject/
 ### Interactive Mode (Default)
 
 ```bash
-pyhatch new myproject
+quickforge new myproject
 ```
 
 Prompts for:
@@ -102,16 +102,16 @@ Prompts for:
 
 ```bash
 # Quick library with defaults
-pyhatch new mylib --type library --yes
+quickforge new mylib --type library --yes
 
 # CLI with strict type checking
-pyhatch new mycli --type cli --strict
+quickforge new mycli --type cli --strict
 
 # API project
-pyhatch new myapi --type api --yes
+quickforge new myapi --type api --yes
 
 # Specify all options
-pyhatch new myproject \
+quickforge new myproject \
     --type library \
     --python 3.12 \
     --license MIT \
@@ -123,11 +123,11 @@ pyhatch new myproject \
 
 ```bash
 # Show help
-pyhatch --help
-pyhatch new --help
+quickforge --help
+quickforge new --help
 
 # Show version
-pyhatch --version
+quickforge --version
 ```
 
 ### Options
@@ -147,7 +147,7 @@ pyhatch --version
 | `--no-pre-commit` | | Skip pre-commit config |
 | `--no-vscode` | | Skip VS Code settings |
 
-> **Tip:** Use `pyhatch add docker` or `pyhatch add docs` after project creation to add Docker or documentation support.
+> **Tip:** Use `quickforge add docker` or `quickforge add docs` after project creation to add Docker or documentation support.
 
 ## After Creating a Project
 
@@ -225,12 +225,12 @@ addopts = ["-v", "--cov"]
 
 ## Additional Commands
 
-### `pyhatch audit`
+### `quickforge audit`
 
 Analyze existing projects for modernization opportunities:
 
 ```bash
-pyhatch audit ./my-project
+quickforge audit ./my-project
 
 # Output shows:
 # - Detected tooling (package manager, linter, formatter, type checker)
@@ -238,19 +238,19 @@ pyhatch audit ./my-project
 # - Recommendations for modernization
 ```
 
-### `pyhatch upgrade`
+### `quickforge upgrade`
 
 Migrate from legacy tooling to modern 2025 stack:
 
 ```bash
 # Auto-detect source tool
-pyhatch upgrade .
+quickforge upgrade .
 
 # Specify source tool
-pyhatch upgrade . --from poetry
+quickforge upgrade . --from poetry
 
 # Preview changes without applying
-pyhatch upgrade . --dry-run
+quickforge upgrade . --dry-run
 ```
 
 Supported migrations:
@@ -261,17 +261,17 @@ Supported migrations:
 - flake8 → ruff lint
 - mypy → basedpyright
 
-### `pyhatch add`
+### `quickforge add`
 
 Add features to existing projects:
 
 ```bash
-pyhatch add github-actions   # CI/CD workflow
-pyhatch add docker           # Dockerfile + docker-compose.yml
-pyhatch add docs             # MkDocs with Material theme
-pyhatch add pre-commit       # Pre-commit hooks
-pyhatch add vscode           # VS Code settings
-pyhatch add devcontainer     # Dev container config
+quickforge add github-actions   # CI/CD workflow
+quickforge add docker           # Dockerfile + docker-compose.yml
+quickforge add docs             # MkDocs with Material theme
+quickforge add pre-commit       # Pre-commit hooks
+quickforge add vscode           # VS Code settings
+quickforge add devcontainer     # Dev container config
 ```
 
 ## Development
@@ -279,8 +279,8 @@ pyhatch add devcontainer     # Dev container config
 ### Setup
 
 ```bash
-git clone https://github.com/Technical-1/pyhatch.git
-cd pyhatch
+git clone https://github.com/Technical-1/quickforge.git
+cd quickforge
 uv sync --dev
 uv run pre-commit install
 ```

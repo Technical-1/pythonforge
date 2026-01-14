@@ -1,5 +1,5 @@
 """
-pyhatch.templates - Jinja2 Template Files
+quickforge.templates - Jinja2 Template Files
 =========================================
 
 This package contains Jinja2 template files used to generate project files.
@@ -42,8 +42,8 @@ All templates receive a context dictionary containing:
     config : ProjectConfig
         Full project configuration object
 
-    pyhatch_version : str
-        Version of pyhatch for attribution
+    quickforge_version : str
+        Version of quickforge for attribution
 
     year : int
         Current year (for licenses)
@@ -53,9 +53,9 @@ Usage
 Templates are loaded via Jinja2's PackageLoader:
 
 >>> from jinja2 import Environment, PackageLoader
->>> env = Environment(loader=PackageLoader("pyhatch", "templates"))
+>>> env = Environment(loader=PackageLoader("quickforge", "templates"))
 >>> template = env.get_template("pyproject.toml.j2")
->>> output = template.render(config=config, pyhatch_version="0.1.0", year=2025)
+>>> output = template.render(config=config, quickforge_version="0.1.0", year=2025)
 
 See Also
 --------

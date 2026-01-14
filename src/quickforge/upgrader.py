@@ -1,5 +1,5 @@
 """
-pyhatch.upgrader - Project Upgrade Module
+quickforge.upgrader - Project Upgrade Module
 =========================================
 
 This module provides functionality to upgrade existing Python projects
@@ -40,7 +40,7 @@ The upgrade process follows these principles:
 
 Usage
 -----
->>> from pyhatch.upgrader import upgrade_project
+>>> from quickforge.upgrader import upgrade_project
 >>> from pathlib import Path
 >>>
 >>> result = upgrade_project(
@@ -61,14 +61,25 @@ See Also
 - cli.py: Command-line interface for upgrade command
 """
 
+# pyright: reportIndexIssue=false
+# pyright: reportOperatorIssue=false
+# pyright: reportAttributeAccessIssue=false
+# pyright: reportArgumentType=false
+# pyright: reportGeneralTypeIssues=false
+# pyright: reportCallIssue=false
+# The above pragmas disable false positives from tomlkit's dynamic typing.
+# tomlkit uses Item/Container types that support dict-like operations at runtime
+# but the type stubs don't reflect this properly.
+
 from __future__ import annotations
 
 import re
 import shutil
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from pathlib import Path
+
 
 try:
     import tomllib
@@ -77,7 +88,7 @@ except ImportError:
 
 import tomlkit
 
-from pyhatch.auditor import (
+from quickforge.auditor import (
     detect_formatter,
     detect_import_sorter,
     detect_linter,
@@ -90,6 +101,7 @@ class SourceTool(str, Enum):
     """
     Source package managers/tools to migrate from.
     """
+
     POETRY = "poetry"
     PIP = "pip"
     PIPENV = "pipenv"
@@ -100,6 +112,7 @@ class MigrationType(str, Enum):
     """
     Types of migrations that can be performed.
     """
+
     PACKAGE_MANAGER = "package_manager"
     LINTER = "linter"
     FORMATTER = "formatter"
@@ -133,6 +146,7 @@ class MigrationStep:
     reversible : bool
         Whether this step can be undone.
     """
+
     migration_type: MigrationType
     description: str
     source: str
@@ -166,6 +180,7 @@ class UpgradeResult:
     migration_steps : list[MigrationStep]
         Steps that were executed.
     """
+
     success: bool
     project_path: Path
     changes_made: list[str] = field(default_factory=list)
@@ -177,6 +192,7 @@ class UpgradeResult:
 # =============================================================================
 # Backup Functions
 # =============================================================================
+
 
 def create_backup(path: Path) -> Path:
     """
@@ -192,8 +208,8 @@ def create_backup(path: Path) -> Path:
     Path
         Path to the backup directory.
     """
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    backup_dir = path / f".pyhatch_backup_{timestamp}"
+    timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
+    backup_dir = path / f".quickforge_backup_{timestamp}"
     backup_dir.mkdir(exist_ok=True)
 
     # Files to backup
@@ -225,12 +241,13 @@ def create_backup(path: Path) -> Path:
 # TOML Manipulation Helpers
 # =============================================================================
 
+
 def _read_toml_doc(path: Path) -> tomlkit.TOMLDocument | None:
     """Read a TOML file as a tomlkit document (preserves formatting)."""
     if not path.exists():
         return None
     try:
-        with open(path, "r", encoding="utf-8") as f:
+        with path.open(encoding="utf-8") as f:
             return tomlkit.load(f)
     except Exception:
         return None
@@ -238,7 +255,7 @@ def _read_toml_doc(path: Path) -> tomlkit.TOMLDocument | None:
 
 def _write_toml_doc(path: Path, doc: tomlkit.TOMLDocument) -> None:
     """Write a tomlkit document to a file."""
-    with open(path, "w", encoding="utf-8") as f:
+    with path.open("w", encoding="utf-8") as f:
         f.write(tomlkit.dumps(doc))
 
 
@@ -253,7 +270,7 @@ def _ensure_pyproject_exists(path: Path) -> tomlkit.TOMLDocument:
 
     # Create minimal pyproject.toml
     doc = tomlkit.document()
-    doc.add(tomlkit.comment("Created by pyhatch upgrade"))
+    doc.add(tomlkit.comment("Created by quickforge upgrade"))
 
     project = tomlkit.table()
     project.add("name", path.name)
@@ -272,6 +289,7 @@ def _ensure_pyproject_exists(path: Path) -> tomlkit.TOMLDocument:
 # =============================================================================
 # Package Manager Migrations
 # =============================================================================
+
 
 def _migrate_poetry_to_uv(path: Path, dry_run: bool) -> list[str]:
     """
@@ -320,7 +338,9 @@ def _migrate_poetry_to_uv(path: Path, dry_run: bool) -> list[str]:
             if isinstance(author, str):
                 match = re.match(r"(.+?)\s*<(.+?)>", author)
                 if match:
-                    authors.append({"name": match.group(1).strip(), "email": match.group(2)})
+                    authors.append(
+                        {"name": match.group(1).strip(), "email": match.group(2)}
+                    )
                 else:
                     authors.append({"name": author})
         if authors:
@@ -348,9 +368,7 @@ def _migrate_poetry_to_uv(path: Path, dry_run: bool) -> list[str]:
     if "python" in poetry.get("dependencies", {}):
         python_req = poetry["dependencies"]["python"]
         # Convert Poetry's format (^3.11) to PEP 621 (>=3.11)
-        if python_req.startswith("^"):
-            project["requires-python"] = ">=" + python_req[1:]
-        elif python_req.startswith("~"):
+        if python_req.startswith("^") or python_req.startswith("~"):
             project["requires-python"] = ">=" + python_req[1:]
         else:
             project["requires-python"] = python_req
@@ -364,20 +382,22 @@ def _migrate_poetry_to_uv(path: Path, dry_run: bool) -> list[str]:
                 continue
             if isinstance(spec, str):
                 # Convert ^ and ~ to PEP 440
-                if spec.startswith("^"):
-                    deps.append(f"{name}>={spec[1:]}")
-                elif spec.startswith("~"):
+                if spec.startswith("^") or spec.startswith("~"):
                     deps.append(f"{name}>={spec[1:]}")
                 else:
-                    deps.append(f"{name}{spec}" if spec[0] in "<>=!" else f"{name}=={spec}")
+                    deps.append(
+                        f"{name}{spec}" if spec[0] in "<>=!" else f"{name}=={spec}"
+                    )
             elif isinstance(spec, dict):
                 version = spec.get("version", "")
-                if version.startswith("^"):
-                    deps.append(f"{name}>={version[1:]}")
-                elif version.startswith("~"):
+                if version.startswith("^") or version.startswith("~"):
                     deps.append(f"{name}>={version[1:]}")
                 elif version:
-                    deps.append(f"{name}{version}" if version[0] in "<>=!" else f"{name}=={version}")
+                    deps.append(
+                        f"{name}{version}"
+                        if version[0] in "<>=!"
+                        else f"{name}=={version}"
+                    )
                 else:
                     deps.append(name)
 
@@ -392,12 +412,12 @@ def _migrate_poetry_to_uv(path: Path, dry_run: bool) -> list[str]:
         if "dependencies" in dev_section:
             for name, spec in dev_section["dependencies"].items():
                 if isinstance(spec, str):
-                    if spec.startswith("^"):
-                        dev_deps.append(f"{name}>={spec[1:]}")
-                    elif spec.startswith("~"):
+                    if spec.startswith("^") or spec.startswith("~"):
                         dev_deps.append(f"{name}>={spec[1:]}")
                     else:
-                        dev_deps.append(f"{name}{spec}" if spec[0] in "<>=!" else f"{name}=={spec}")
+                        dev_deps.append(
+                            f"{name}{spec}" if spec[0] in "<>=!" else f"{name}=={spec}"
+                        )
                 else:
                     dev_deps.append(name)
 
@@ -405,12 +425,12 @@ def _migrate_poetry_to_uv(path: Path, dry_run: bool) -> list[str]:
     if "dev-dependencies" in poetry:
         for name, spec in poetry["dev-dependencies"].items():
             if isinstance(spec, str):
-                if spec.startswith("^"):
-                    dev_deps.append(f"{name}>={spec[1:]}")
-                elif spec.startswith("~"):
+                if spec.startswith("^") or spec.startswith("~"):
                     dev_deps.append(f"{name}>={spec[1:]}")
                 else:
-                    dev_deps.append(f"{name}{spec}" if spec[0] in "<>=!" else f"{name}=={spec}")
+                    dev_deps.append(
+                        f"{name}{spec}" if spec[0] in "<>=!" else f"{name}=={spec}"
+                    )
             else:
                 dev_deps.append(name)
 
@@ -464,9 +484,9 @@ def _migrate_requirements_to_uv(path: Path, dry_run: bool) -> list[str]:
 
     # Parse requirements.txt
     deps = []
-    with open(req_file, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
+    with req_file.open(encoding="utf-8") as f:
+        for raw_line in f:
+            line = raw_line.strip()
             # Skip comments and empty lines
             if not line or line.startswith("#"):
                 continue
@@ -492,9 +512,9 @@ def _migrate_requirements_to_uv(path: Path, dry_run: bool) -> list[str]:
     req_dev = path / "requirements-dev.txt"
     if req_dev.exists():
         dev_deps = []
-        with open(req_dev, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
+        with req_dev.open(encoding="utf-8") as f:
+            for raw_line in f:
+                line = raw_line.strip()
                 if not line or line.startswith("#") or line.startswith("-"):
                     continue
                 dev_deps.append(line)
@@ -503,7 +523,9 @@ def _migrate_requirements_to_uv(path: Path, dry_run: bool) -> list[str]:
             if "optional-dependencies" not in doc["project"]:
                 doc["project"]["optional-dependencies"] = tomlkit.table()
             doc["project"]["optional-dependencies"]["dev"] = dev_deps
-            changes.append(f"Migrated {len(dev_deps)} dev dependencies from requirements-dev.txt")
+            changes.append(
+                f"Migrated {len(dev_deps)} dev dependencies from requirements-dev.txt"
+            )
 
     if not dry_run:
         _write_toml_doc(path / "pyproject.toml", doc)
@@ -527,7 +549,7 @@ def _migrate_pipenv_to_uv(path: Path, dry_run: bool) -> list[str]:
 
     # Parse Pipfile (it's TOML-like)
     try:
-        with open(pipfile, "rb") as f:
+        with pipfile.open("rb") as f:
             pipfile_data = tomllib.load(f)
     except Exception as e:
         return [f"Could not parse Pipfile: {e}"]
@@ -597,6 +619,7 @@ def _migrate_setuptools_to_uv(path: Path, dry_run: bool) -> list[str]:
     if setup_cfg.exists():
         try:
             import configparser
+
             config = configparser.ConfigParser()
             config.read(setup_cfg)
 
@@ -626,7 +649,9 @@ def _migrate_setuptools_to_uv(path: Path, dry_run: bool) -> list[str]:
 
             if config.has_section("options"):
                 if config.has_option("options", "python_requires"):
-                    project["requires-python"] = config.get("options", "python_requires")
+                    project["requires-python"] = config.get(
+                        "options", "python_requires"
+                    )
                 if config.has_option("options", "install_requires"):
                     deps = config.get("options", "install_requires").strip().split("\n")
                     deps = [d.strip() for d in deps if d.strip()]
@@ -652,7 +677,10 @@ def _migrate_setuptools_to_uv(path: Path, dry_run: bool) -> list[str]:
 # Linter/Formatter Migrations
 # =============================================================================
 
-def _migrate_black_to_ruff(path: Path, doc: tomlkit.TOMLDocument, dry_run: bool) -> list[str]:
+
+def _migrate_black_to_ruff(
+    path: Path, doc: tomlkit.TOMLDocument, dry_run: bool
+) -> list[str]:
     """Migrate Black config to ruff format config."""
     changes = []
 
@@ -699,7 +727,9 @@ def _migrate_black_to_ruff(path: Path, doc: tomlkit.TOMLDocument, dry_run: bool)
 
     # Migrate skip-magic-trailing-comma
     if "skip-magic-trailing-comma" in black_config:
-        ruff["format"]["skip-magic-trailing-comma"] = black_config["skip-magic-trailing-comma"]
+        ruff["format"]["skip-magic-trailing-comma"] = black_config[
+            "skip-magic-trailing-comma"
+        ]
 
     # Remove Black config
     if "black" in tool:
@@ -709,7 +739,9 @@ def _migrate_black_to_ruff(path: Path, doc: tomlkit.TOMLDocument, dry_run: bool)
     return changes
 
 
-def _migrate_isort_to_ruff(path: Path, doc: tomlkit.TOMLDocument, dry_run: bool) -> list[str]:
+def _migrate_isort_to_ruff(
+    path: Path, doc: tomlkit.TOMLDocument, dry_run: bool
+) -> list[str]:
     """Migrate isort config to ruff lint.isort config."""
     changes = []
 
@@ -773,7 +805,9 @@ def _migrate_isort_to_ruff(path: Path, doc: tomlkit.TOMLDocument, dry_run: bool)
     return changes
 
 
-def _migrate_flake8_to_ruff(path: Path, doc: tomlkit.TOMLDocument, dry_run: bool) -> list[str]:
+def _migrate_flake8_to_ruff(
+    path: Path, doc: tomlkit.TOMLDocument, dry_run: bool
+) -> list[str]:
     """Migrate flake8 config to ruff lint config."""
     changes = []
 
@@ -796,6 +830,7 @@ def _migrate_flake8_to_ruff(path: Path, doc: tomlkit.TOMLDocument, dry_run: bool
     if flake8_file.exists():
         try:
             import configparser
+
             config = configparser.ConfigParser()
             config.read(flake8_file)
             if config.has_section("flake8"):
@@ -838,7 +873,10 @@ def _migrate_flake8_to_ruff(path: Path, doc: tomlkit.TOMLDocument, dry_run: bool
 # Type Checker Migration
 # =============================================================================
 
-def _migrate_mypy_to_basedpyright(path: Path, doc: tomlkit.TOMLDocument, dry_run: bool) -> list[str]:
+
+def _migrate_mypy_to_basedpyright(
+    path: Path, doc: tomlkit.TOMLDocument, dry_run: bool
+) -> list[str]:
     """Migrate mypy config to basedpyright config."""
     changes = []
 
@@ -896,20 +934,18 @@ def _migrate_mypy_to_basedpyright(path: Path, doc: tomlkit.TOMLDocument, dry_run
 # Main Migration Functions
 # =============================================================================
 
+
 def detect_source_tool(path: Path) -> SourceTool | None:
     """Auto-detect the source package manager."""
     pkg_manager, _ = detect_package_manager(path)
 
-    if pkg_manager == "poetry":
-        return SourceTool.POETRY
-    elif pkg_manager == "pip":
-        return SourceTool.PIP
-    elif pkg_manager == "pipenv":
-        return SourceTool.PIPENV
-    elif pkg_manager == "setuptools":
-        return SourceTool.SETUPTOOLS
-
-    return None
+    tool_map = {
+        "poetry": SourceTool.POETRY,
+        "pip": SourceTool.PIP,
+        "pipenv": SourceTool.PIPENV,
+        "setuptools": SourceTool.SETUPTOOLS,
+    }
+    return tool_map.get(pkg_manager)
 
 
 def create_migration_plan(
@@ -945,81 +981,101 @@ def create_migration_plan(
 
     # Package manager migration
     if source_tool == SourceTool.POETRY:
-        steps.append(MigrationStep(
-            migration_type=MigrationType.PACKAGE_MANAGER,
-            description="Convert Poetry pyproject.toml to PEP 621 format for uv",
-            source="poetry",
-            target="uv",
-            files_affected=[path / "pyproject.toml", path / "poetry.lock"],
-        ))
+        steps.append(
+            MigrationStep(
+                migration_type=MigrationType.PACKAGE_MANAGER,
+                description="Convert Poetry pyproject.toml to PEP 621 format for uv",
+                source="poetry",
+                target="uv",
+                files_affected=[path / "pyproject.toml", path / "poetry.lock"],
+            )
+        )
     elif source_tool == SourceTool.PIP:
-        steps.append(MigrationStep(
-            migration_type=MigrationType.PACKAGE_MANAGER,
-            description="Convert requirements.txt to pyproject.toml for uv",
-            source="pip",
-            target="uv",
-            files_affected=[path / "requirements.txt", path / "pyproject.toml"],
-        ))
+        steps.append(
+            MigrationStep(
+                migration_type=MigrationType.PACKAGE_MANAGER,
+                description="Convert requirements.txt to pyproject.toml for uv",
+                source="pip",
+                target="uv",
+                files_affected=[path / "requirements.txt", path / "pyproject.toml"],
+            )
+        )
     elif source_tool == SourceTool.PIPENV:
-        steps.append(MigrationStep(
-            migration_type=MigrationType.PACKAGE_MANAGER,
-            description="Convert Pipfile to pyproject.toml for uv",
-            source="pipenv",
-            target="uv",
-            files_affected=[path / "Pipfile", path / "pyproject.toml"],
-        ))
+        steps.append(
+            MigrationStep(
+                migration_type=MigrationType.PACKAGE_MANAGER,
+                description="Convert Pipfile to pyproject.toml for uv",
+                source="pipenv",
+                target="uv",
+                files_affected=[path / "Pipfile", path / "pyproject.toml"],
+            )
+        )
     elif source_tool == SourceTool.SETUPTOOLS:
-        steps.append(MigrationStep(
-            migration_type=MigrationType.PACKAGE_MANAGER,
-            description="Convert setup.py/setup.cfg to pyproject.toml",
-            source="setuptools",
-            target="uv",
-            files_affected=[path / "setup.py", path / "setup.cfg", path / "pyproject.toml"],
-        ))
+        steps.append(
+            MigrationStep(
+                migration_type=MigrationType.PACKAGE_MANAGER,
+                description="Convert setup.py/setup.cfg to pyproject.toml",
+                source="setuptools",
+                target="uv",
+                files_affected=[
+                    path / "setup.py",
+                    path / "setup.cfg",
+                    path / "pyproject.toml",
+                ],
+            )
+        )
 
     # Formatter migration
     formatter, _ = detect_formatter(path)
     if formatter == "black":
-        steps.append(MigrationStep(
-            migration_type=MigrationType.FORMATTER,
-            description="Migrate Black configuration to ruff format",
-            source="black",
-            target="ruff",
-            files_affected=[path / "pyproject.toml"],
-        ))
+        steps.append(
+            MigrationStep(
+                migration_type=MigrationType.FORMATTER,
+                description="Migrate Black configuration to ruff format",
+                source="black",
+                target="ruff",
+                files_affected=[path / "pyproject.toml"],
+            )
+        )
 
     # Import sorter migration
     sorter, _ = detect_import_sorter(path)
     if sorter == "isort":
-        steps.append(MigrationStep(
-            migration_type=MigrationType.LINTER,
-            description="Migrate isort configuration to ruff lint.isort",
-            source="isort",
-            target="ruff",
-            files_affected=[path / "pyproject.toml", path / ".isort.cfg"],
-        ))
+        steps.append(
+            MigrationStep(
+                migration_type=MigrationType.LINTER,
+                description="Migrate isort configuration to ruff lint.isort",
+                source="isort",
+                target="ruff",
+                files_affected=[path / "pyproject.toml", path / ".isort.cfg"],
+            )
+        )
 
     # Linter migration
     linter, _ = detect_linter(path)
     if linter == "flake8":
-        steps.append(MigrationStep(
-            migration_type=MigrationType.LINTER,
-            description="Migrate flake8 configuration to ruff lint",
-            source="flake8",
-            target="ruff",
-            files_affected=[path / "pyproject.toml", path / ".flake8"],
-        ))
+        steps.append(
+            MigrationStep(
+                migration_type=MigrationType.LINTER,
+                description="Migrate flake8 configuration to ruff lint",
+                source="flake8",
+                target="ruff",
+                files_affected=[path / "pyproject.toml", path / ".flake8"],
+            )
+        )
 
     # Type checker migration
     type_checker, _ = detect_type_checker(path)
     if type_checker == "mypy":
-        steps.append(MigrationStep(
-            migration_type=MigrationType.TYPE_CHECKER,
-            description="Migrate mypy configuration to basedpyright",
-            source="mypy",
-            target="basedpyright",
-            files_affected=[path / "pyproject.toml", path / "mypy.ini"],
-        ))
+        steps.append(
+            MigrationStep(
+                migration_type=MigrationType.TYPE_CHECKER,
+                description="Migrate mypy configuration to basedpyright",
+                source="mypy",
+                target="basedpyright",
+                files_affected=[path / "pyproject.toml", path / "mypy.ini"],
+            )
+        )
 
     return steps
 
@@ -1078,7 +1134,9 @@ def upgrade_project(
     result.migration_steps = steps
 
     if not steps:
-        result.changes_made.append("No migrations needed - project may already use modern tooling")
+        result.changes_made.append(
+            "No migrations needed - project may already use modern tooling"
+        )
         result.success = True
         return result
 

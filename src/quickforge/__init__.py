@@ -1,5 +1,5 @@
 """
-pyhatch - Modern Python Project Bootstrapper
+quickforge - Modern Python Project Bootstrapper
 ============================================
 
 A CLI tool that creates production-ready Python projects with 2025's best
@@ -16,19 +16,19 @@ Features
 Quick Start
 -----------
 ```bash
-# Install pyhatch
-pip install pyhatch
+# Install quickforge
+pip install quickforge
 
 # Create a new project interactively
-pyhatch new myproject
+quickforge new myproject
 
 # Or with options
-pyhatch new myproject --type cli --python 3.12
+quickforge new myproject --type cli --python 3.12
 ```
 
 Example
 -------
->>> from pyhatch import create_project
+>>> from quickforge import create_project
 >>> create_project("myproject", project_type="library")
 Project 'myproject' created successfully!
 
@@ -62,12 +62,12 @@ __license__ = "MIT"
 # Public API Exports
 # =============================================================================
 # These are the main functions/classes users should interact with when using
-# pyhatch as a library (as opposed to the CLI)
+# quickforge as a library (as opposed to the CLI)
 
-from pyhatch.auditor import audit_project
-from pyhatch.generator import create_project
-from pyhatch.models import ProjectConfig, ProjectType
-from pyhatch.upgrader import upgrade_project
+from quickforge.auditor import audit_project
+from quickforge.generator import create_project
+from quickforge.models import ProjectConfig, ProjectType
+from quickforge.upgrader import upgrade_project
 
 
 __all__ = [

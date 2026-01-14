@@ -1,6 +1,6 @@
-# Publishing pyhatch to PyPI
+# Publishing quickforge to PyPI
 
-This guide covers how to publish pyhatch to PyPI so it can be installed with `pip install pyhatch`.
+This guide covers how to publish quickforge to PyPI so it can be installed with `pip install quickforge`.
 
 ## Prerequisites
 
@@ -17,7 +17,7 @@ This guide covers how to publish pyhatch to PyPI so it can be installed with `pi
 ### 1. Install Build Tools
 
 ```bash
-cd /Volumes/NO\ NAME/01_ACTIVE/Pypi/pyhatch
+cd /Volumes/NO\ NAME/01_ACTIVE/Pypi/quickforge
 
 # Using uv (if available)
 uv pip install build twine
@@ -63,15 +63,15 @@ python -m build
 ```
 
 This creates:
-- `dist/pyhatch-0.1.0.tar.gz` (source distribution)
-- `dist/pyhatch-0.1.0-py3-none-any.whl` (wheel)
+- `dist/quickforge-0.1.0.tar.gz` (source distribution)
+- `dist/quickforge-0.1.0-py3-none-any.whl` (wheel)
 
 ### 3. Verify the Build
 
 ```bash
 # Check the contents
-tar -tzf dist/pyhatch-0.1.0.tar.gz | head -20
-unzip -l dist/pyhatch-0.1.0-py3-none-any.whl | head -20
+tar -tzf dist/quickforge-0.1.0.tar.gz | head -20
+unzip -l dist/quickforge-0.1.0-py3-none-any.whl | head -20
 
 # Validate with twine
 twine check dist/*
@@ -93,11 +93,11 @@ twine check dist/*
    source test_env/bin/activate  # or test_env\Scripts\activate on Windows
 
    # Install from TestPyPI
-   pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ pyhatch
+   pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ quickforge
 
    # Test it works
-   pyhatch --version
-   pyhatch --help
+   quickforge --version
+   quickforge --help
    ```
 
 3. **Upload to Production PyPI**:
@@ -117,18 +117,18 @@ After publishing:
 
 ```bash
 # Install from PyPI
-pip install pyhatch
+pip install quickforge
 
 # Verify installation
-pyhatch --version
-pyhatch new test-project --type library --yes
+quickforge --version
+quickforge new test-project --type library --yes
 ```
 
 ## Version Bumping
 
 Before each release, update the version in:
 1. `pyproject.toml`: `version = "X.Y.Z"`
-2. `src/pyhatch/__init__.py`: `__version__ = "X.Y.Z"`
+2. `src/quickforge/__init__.py`: `__version__ = "X.Y.Z"`
 
 Follow [Semantic Versioning](https://semver.org/):
 - **MAJOR**: Breaking changes
@@ -185,10 +185,10 @@ jobs:
 ```
 
 To enable trusted publishing:
-1. Go to PyPI → Your Projects → pyhatch → Settings → Publishing
+1. Go to PyPI → Your Projects → quickforge → Settings → Publishing
 2. Add GitHub as a trusted publisher:
    - Owner: `Technical-1`
-   - Repository: `pyhatch`
+   - Repository: `quickforge`
    - Workflow: `publish.yml`
 
 ## Troubleshooting
@@ -203,13 +203,13 @@ Regenerate your API token and update `~/.pypirc`.
 Check that `.gitignore` excludes test files, `.venv`, etc.
 
 ### Package name taken
-If `pyhatch` is already taken on PyPI, you'll need to choose a different name like `py-init` or `pyhatch-cli`.
+If `quickforge` is already taken on PyPI, you'll need to choose a different name like `py-init` or `quickforge-cli`.
 
 ## Quick Commands Reference
 
 ```bash
 # Full release workflow
-cd /Volumes/NO\ NAME/01_ACTIVE/Pypi/pyhatch
+cd /Volumes/NO\ NAME/01_ACTIVE/Pypi/quickforge
 rm -rf dist/ build/
 python -m build
 twine check dist/*
