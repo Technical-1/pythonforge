@@ -2,9 +2,9 @@
 
 <div align="center">
 
-![PyPI](https://img.shields.io/pypi/v/quickforge?style=for-the-badge&color=blue)
+[![PyPI](https://img.shields.io/pypi/v/quickforge?style=for-the-badge&color=blue&cacheSeconds=0)](https://pypi.org/project/quickforge/)
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![License](https://img.shields.io/pypi/l/quickforge?style=for-the-badge)
+[![License](https://img.shields.io/github/license/Technical-1/pythonforge?style=for-the-badge)](LICENSE)
 
 **Modern Python project bootstrapper with 2025's best toolchain.**
 
