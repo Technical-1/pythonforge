@@ -1,64 +1,131 @@
-# quickforge
+# ⚡ quickforge
 
-> Modern Python project bootstrapper with 2025's best toolchain
+<div align="center">
 
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+![PyPI](https://img.shields.io/pypi/v/quickforge?style=for-the-badge&color=blue)
+![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![License](https://img.shields.io/pypi/l/quickforge?style=for-the-badge)
 
-**quickforge** creates production-ready Python projects with zero configuration. One command gives you a complete project with modern tooling:
+**Modern Python project bootstrapper with 2025's best toolchain.**
 
-- ⚡ **[uv](https://docs.astral.sh/uv/)** - Blazing fast package manager (10-100x faster than pip)
-- 🧹 **[ruff](https://docs.astral.sh/ruff/)** - Linting and formatting (replaces black, isort, flake8)
-- 🔍 **[basedpyright](https://docs.basedpyright.com/)** - Strict type checking
-- ✅ **[pytest](https://docs.pytest.org/)** - Testing with coverage
-- 🔧 **[pre-commit](https://pre-commit.com/)** - Automated code quality checks
+🚀 **Zero Config** • ⚡ **Blazing Fast** • 🔧 **Modern Tools** • 🎯 **Production Ready**
 
-## Installation
+[Installation](#-installation) • [Quick Start](#-quick-start) • [Project Types](#-project-types) • [Commands](#-commands)
+
+</div>
+
+---
+
+## ✨ What quickforge Does
+
+One command creates a complete, production-ready Python project with modern tooling:
+
+```bash
+quickforge new myproject
+```
+
+That's it! Your project is ready with all the best practices built in.
+
+### ⚡ **Modern Toolchain**
+- **[uv](https://docs.astral.sh/uv/)** - Blazing fast package manager (10-100x faster than pip)
+- **[ruff](https://docs.astral.sh/ruff/)** - Linting & formatting (replaces black, isort, flake8)
+- **[basedpyright](https://docs.basedpyright.com/)** - Strict type checking
+- **[pytest](https://docs.pytest.org/)** - Testing with coverage
+- **[pre-commit](https://pre-commit.com/)** - Automated code quality
+
+### 📦 **Everything Configured**
+- ✅ Proper package structure (src layout)
+- ✅ `pyproject.toml` with all tools configured
+- ✅ Pre-commit hooks ready to go
+- ✅ GitHub Actions CI/CD
+- ✅ VS Code settings optimized
+- ✅ Type checking enabled from day one
+- ✅ Test skeleton with pytest + coverage
+
+### 🔄 **Migration Tools**
+- Upgrade legacy projects to modern tooling
+- Migrate from Poetry, pip, pipenv, or setuptools
+- Convert black/isort/flake8/mypy to ruff/basedpyright
+
+---
+
+## 📦 Installation
 
 ```bash
 # Using uv (recommended)
 uv tool install quickforge
+```
 
+```bash
 # Using pip
 pip install quickforge
+```
 
+```bash
 # Using pipx
 pipx install quickforge
 ```
 
-## Quick Start
+---
+
+## 🚀 Quick Start
+
+### Interactive Mode (Default)
 
 ```bash
-# Create a new project interactively
 quickforge new myproject
-
-# Create with options (non-interactive)
-quickforge new myproject --type cli --python 3.12 --yes
 ```
 
-That's it! Your project is ready with:
-- ✅ Proper package structure (src layout)
-- ✅ pyproject.toml with all tools configured
-- ✅ Pre-commit hooks
-- ✅ GitHub Actions CI/CD
-- ✅ VS Code settings
-- ✅ Type checking enabled
-- ✅ Test skeleton with pytest
+Prompts you for project type, Python version, license, author info, and features.
 
-## Project Types
+### Non-Interactive Mode
 
-quickforge supports different project types optimized for their use case:
+```bash
+# Quick library with defaults
+quickforge new mylib --type library --yes
 
-| Type | Description | Entry Point |
-|------|-------------|-------------|
-| `library` | PyPI-publishable package | `from package import ...` |
-| `cli` | Command-line tool | `$ mycommand --help` |
-| `api` | FastAPI web service | `uvicorn app:main` |
-| `app` | Standalone application | `python -m package` |
-| `script` | Single-file with inline deps | `uv run script.py` |
+# CLI with strict type checking
+quickforge new mycli --type cli --strict
 
-## Generated Structure
+# FastAPI project
+quickforge new myapi --type api --yes
+
+# Specify everything
+quickforge new myproject \
+    --type library \
+    --python 3.12 \
+    --license MIT \
+    --author "Jane Doe" \
+    --email "jane@example.com"
+```
+
+### After Creating a Project
+
+```bash
+cd myproject
+uv sync                    # Install dependencies
+uv run pytest              # Run tests
+uv run ruff check .        # Lint code
+uv run ruff format .       # Format code
+uv run basedpyright        # Type check
+uv run pre-commit install  # Setup git hooks
+```
+
+---
+
+## 📁 Project Types
+
+| Type | Description | Use Case |
+|------|-------------|----------|
+| **library** | PyPI-publishable package | Reusable code, open source packages |
+| **cli** | Command-line tool with Typer | Terminal applications, dev tools |
+| **api** | FastAPI web service | REST APIs, microservices |
+| **app** | Standalone application | Scripts that need structure |
+| **script** | Single-file with inline deps | Quick automation, one-off tasks |
+
+---
+
+## 📂 Generated Structure
 
 ```
 myproject/
@@ -72,65 +139,28 @@ myproject/
 │   └── test_main.py
 ├── .github/
 │   └── workflows/
-│       └── ci.yml             # GitHub Actions workflow
+│       └── ci.yml             # GitHub Actions
 ├── .vscode/
-│   ├── settings.json          # Editor settings
-│   └── extensions.json        # Recommended extensions
+│   ├── settings.json
+│   └── extensions.json
 ├── pyproject.toml             # All configuration
-├── .pre-commit-config.yaml    # Pre-commit hooks
+├── .pre-commit-config.yaml
 ├── .gitignore
 ├── README.md
 └── LICENSE
 ```
 
-## Usage
+---
 
-### Interactive Mode (Default)
+## 🛠️ Commands
 
-```bash
-quickforge new myproject
-```
+### `quickforge new`
 
-Prompts for:
-- Project type
-- Python version
-- License
-- Author info
-- Optional features
-
-### Non-Interactive Mode
+Create a new project:
 
 ```bash
-# Quick library with defaults
-quickforge new mylib --type library --yes
-
-# CLI with strict type checking
-quickforge new mycli --type cli --strict
-
-# API project
-quickforge new myapi --type api --yes
-
-# Specify all options
-quickforge new myproject \
-    --type library \
-    --python 3.12 \
-    --license MIT \
-    --author "Jane Doe" \
-    --email "jane@example.com"
+quickforge new myproject [OPTIONS]
 ```
-
-### Command Reference
-
-```bash
-# Show help
-quickforge --help
-quickforge new --help
-
-# Show version
-quickforge --version
-```
-
-### Options
 
 | Option | Short | Description |
 |--------|-------|-------------|
@@ -139,91 +169,15 @@ quickforge --version
 | `--license` | `-l` | License: MIT, Apache-2.0, GPL-3.0-only, BSD-3-Clause |
 | `--author` | `-a` | Author name |
 | `--email` | `-e` | Author email |
-| `--output` | `-o` | Output directory (default: current) |
+| `--output` | `-o` | Output directory |
 | `--strict` | | Enable strict type checking |
 | `--yes` | `-y` | Skip prompts, use defaults |
 | `--no-git` | | Skip git initialization |
 | `--no-github-actions` | | Skip GitHub Actions |
 | `--no-pre-commit` | | Skip pre-commit config |
 | `--no-vscode` | | Skip VS Code settings |
-
-> **Tip:** Use `quickforge add docker` or `quickforge add docs` after project creation to add Docker or documentation support.
-
-## After Creating a Project
-
-```bash
-cd myproject
-
-# Install dependencies
-uv sync
-
-# Run tests
-uv run pytest
-
-# Run linter
-uv run ruff check .
-
-# Run formatter
-uv run ruff format .
-
-# Run type checker
-uv run basedpyright
-
-# Install pre-commit hooks
-uv run pre-commit install
-```
-
-## Why These Tools?
-
-### uv over pip/poetry/pipenv
-
-- **10-100x faster** than pip for installs
-- Written in Rust for maximum performance
-- Built-in virtual environment management
-- Lockfile support for reproducible builds
-- Drop-in replacement for pip commands
-
-### ruff over black/isort/flake8
-
-- **10-100x faster** than traditional Python linters
-- Single tool replaces black, isort, flake8, and more
-- 800+ lint rules from popular linters
-- Automatic fixes for most issues
-- Configuration in pyproject.toml
-
-### basedpyright over mypy
-
-- **Faster** type checking
-- Better error messages
-- Stricter defaults catch more bugs
-- Better VSCode/Pylance integration
-- Drop-in replacement for pyright
-
-## Configuration
-
-All configuration lives in `pyproject.toml`. No more scattered config files!
-
-```toml
-# Ruff configuration
-[tool.ruff]
-target-version = "py312"
-line-length = 88
-
-[tool.ruff.lint]
-select = ["E", "W", "F", "I", "UP", "B", "SIM", "RUF"]
-
-# Type checking
-[tool.basedpyright]
-typeCheckingMode = "standard"
-pythonVersion = "3.12"
-
-# Testing
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-addopts = ["-v", "--cov"]
-```
-
-## Additional Commands
+| `--with-docker` | | Include Docker configuration |
+| `--with-docs` | | Include MkDocs documentation |
 
 ### `quickforge audit`
 
@@ -231,35 +185,27 @@ Analyze existing projects for modernization opportunities:
 
 ```bash
 quickforge audit ./my-project
-
-# Output shows:
-# - Detected tooling (package manager, linter, formatter, type checker)
-# - Project health score (0-100)
-# - Recommendations for modernization
 ```
+
+Shows detected tooling, project health score, and recommendations.
 
 ### `quickforge upgrade`
 
-Migrate from legacy tooling to modern 2025 stack:
+Migrate from legacy tooling to modern stack:
 
 ```bash
-# Auto-detect source tool
-quickforge upgrade .
-
-# Specify source tool
-quickforge upgrade . --from poetry
-
-# Preview changes without applying
-quickforge upgrade . --dry-run
+quickforge upgrade .              # Auto-detect and upgrade
+quickforge upgrade . --from poetry  # Specify source tool
+quickforge upgrade . --dry-run      # Preview changes
 ```
 
-Supported migrations:
-- Poetry → uv
-- pip/requirements.txt → uv
-- black → ruff format
-- isort → ruff
-- flake8 → ruff lint
-- mypy → basedpyright
+| Migration | From | To |
+|-----------|------|-----|
+| Package Manager | Poetry, pip, pipenv, setuptools | uv |
+| Formatter | black | ruff format |
+| Import Sorting | isort | ruff (I rules) |
+| Linter | flake8 | ruff lint |
+| Type Checker | mypy | basedpyright |
 
 ### `quickforge add`
 
@@ -274,47 +220,77 @@ quickforge add vscode           # VS Code settings
 quickforge add devcontainer     # Dev container config
 ```
 
-## Development
+---
 
-### Setup
+## ⚡ Why These Tools?
+
+### uv over pip/poetry/pipenv
+
+| Metric | pip | poetry | uv |
+|--------|-----|--------|-----|
+| Install Speed | 1x | 2x | **10-100x** |
+| Written In | Python | Python | Rust |
+| Lockfile | ❌ | ✅ | ✅ |
+| Workspaces | ❌ | ❌ | ✅ |
+
+### ruff over black/isort/flake8
+
+| Metric | black + isort + flake8 | ruff |
+|--------|------------------------|------|
+| Speed | 1x | **10-100x** |
+| Config Files | 3 | 1 |
+| Rules | ~500 | **800+** |
+| Auto-fix | Limited | Extensive |
+
+### basedpyright over mypy
+
+| Metric | mypy | basedpyright |
+|--------|------|--------------|
+| Speed | 1x | **3-5x** |
+| Error Messages | Basic | Detailed |
+| VSCode Integration | Good | Excellent |
+| Strictness | Configurable | Stricter defaults |
+
+---
+
+## 🧪 Development
 
 ```bash
+# Clone and setup
 git clone https://github.com/Technical-1/quickforge.git
 cd quickforge
-uv sync --dev
+uv sync --extra dev
 uv run pre-commit install
-```
 
-### Running Tests
-
-```bash
+# Run tests
 uv run pytest
-```
 
-### Running Linters
-
-```bash
+# Run linters
 uv run ruff check .
 uv run ruff format .
 uv run basedpyright
 ```
 
-## Philosophy
+---
 
-1. **Convention over configuration** - Sensible defaults that work for 90% of projects
-2. **Modern by default** - Use 2025's best tools, not legacy compatibility
+## 💡 Philosophy
+
+1. **Convention over configuration** - Sensible defaults for 90% of projects
+2. **Modern by default** - 2025's best tools, not legacy compatibility
 3. **Type-safe** - Full type annotations from day one
 4. **Fast** - Rust-based tools for instant feedback
 5. **Single source of truth** - All config in pyproject.toml
 
-## Contributing
+---
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-## License
+## 📄 License
 
 MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-Made with ❤️ by developers who were tired of project setup boilerplate.
+<div align="center">
+
+**Made by [Jacob Kanfer](https://jacobkanfer.com)**
+
+</div>
