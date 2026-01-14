@@ -246,4 +246,12 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "if TYPE_CHECKING:",
     "@abstractmethod",
+    # Interactive prompts (require user input, tested manually)
+    "questionary\\.",
+    "\\.ask\\(\\)",
+]
+
+# Exclude interactive CLI modules from coverage requirements
+omit = [
+    "src/quickforge/cli.py",
 ]

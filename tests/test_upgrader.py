@@ -150,6 +150,11 @@ authors = ["Test Author <test@example.com>"]
 [tool.poetry.dependencies]
 python = "^3.11"
 requests = "^2.28"
+flask = ">=2.0"
+click = "~8.0"
+pydantic = {version = "^2.0"}
+attrs = {version = ">=23.0"}
+simple = "*"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.0"
@@ -190,6 +195,23 @@ flask>=2.0
         assert pyproject.exists()
         content = pyproject.read_text()
         assert "requests" in content
+
+    def test_upgrade_requirements_with_dev(self, tmp_path: Path) -> None:
+        """Test upgrading from requirements.txt with requirements-dev.txt."""
+        req = tmp_path / "requirements.txt"
+        req.write_text("requests>=2.28\nflask>=2.0")
+        req_dev = tmp_path / "requirements-dev.txt"
+        req_dev.write_text("pytest>=7.0\nruff>=0.1.0")
+
+        result = upgrade_project(tmp_path, backup=False)
+
+        assert result.success
+
+        # Check pyproject.toml has both regular and dev dependencies
+        pyproject = tmp_path / "pyproject.toml"
+        content = pyproject.read_text()
+        assert "requests" in content
+        assert "pytest" in content
 
     def test_dry_run_makes_no_changes(self, tmp_path: Path) -> None:
         """Test that dry run doesn't modify files."""
@@ -247,6 +269,43 @@ python_version = "3.11"
         assert "[tool.basedpyright]" in content
         assert "[tool.mypy]" not in content
 
+    def test_upgrade_mypy_standard_mode(self, tmp_path: Path) -> None:
+        """Test migrating mypy with warn_return_any to basedpyright standard."""
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text("""
+[project]
+name = "test"
+
+[tool.mypy]
+warn_return_any = true
+ignore_missing_imports = true
+""")
+
+        result = upgrade_project(tmp_path, backup=False)
+
+        assert result.success
+        content = pyproject.read_text()
+        assert "[tool.basedpyright]" in content
+        assert "standard" in content
+
+    def test_upgrade_mypy_basic_mode(self, tmp_path: Path) -> None:
+        """Test migrating basic mypy to basedpyright basic."""
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text("""
+[project]
+name = "test"
+
+[tool.mypy]
+python_version = "3.11"
+""")
+
+        result = upgrade_project(tmp_path, backup=False)
+
+        assert result.success
+        content = pyproject.read_text()
+        assert "[tool.basedpyright]" in content
+        assert "basic" in content
+
     def test_upgrade_flake8_to_ruff(self, tmp_path: Path) -> None:
         """Test migrating flake8 to ruff."""
         (tmp_path / ".flake8").write_text("""
@@ -266,6 +325,84 @@ exclude = .git,__pycache__
         # ruff config should be in pyproject.toml
         content = pyproject.read_text()
         assert "[tool.ruff]" in content
+
+    def test_upgrade_isort_to_ruff(self, tmp_path: Path) -> None:
+        """Test migrating isort to ruff."""
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text("""
+[project]
+name = "test"
+
+[tool.isort]
+known_first_party = ["mypackage"]
+force_single_line = true
+""")
+
+        result = upgrade_project(tmp_path, backup=False)
+
+        assert result.success
+        content = pyproject.read_text()
+        # isort config should be migrated to ruff.lint.isort
+        assert "[tool.ruff.lint.isort]" in content
+        # Original isort section should be removed
+        assert "[tool.isort]" not in content
+
+    def test_upgrade_pipenv_to_uv(self, tmp_path: Path) -> None:
+        """Test upgrading from Pipenv to uv."""
+        pipfile = tmp_path / "Pipfile"
+        pipfile.write_text("""
+[packages]
+requests = "*"
+flask = ">=2.0"
+
+[dev-packages]
+pytest = "*"
+
+[requires]
+python_version = "3.11"
+""")
+        (tmp_path / "Pipfile.lock").touch()
+
+        result = upgrade_project(tmp_path, backup=False)
+
+        assert result.success
+
+        # Check pyproject.toml was created
+        pyproject = tmp_path / "pyproject.toml"
+        assert pyproject.exists()
+        content = pyproject.read_text()
+        assert "requests" in content
+        assert "flask" in content
+
+    def test_upgrade_setuptools_to_uv(self, tmp_path: Path) -> None:
+        """Test upgrading from setup.cfg to uv."""
+        setup_cfg = tmp_path / "setup.cfg"
+        setup_cfg.write_text("""
+[metadata]
+name = testproject
+version = 0.1.0
+description = A test project
+author = Test Author
+author_email = test@example.com
+
+[options]
+packages = find:
+python_requires = >=3.11
+install_requires =
+    requests>=2.0
+    flask>=2.0
+""")
+        (tmp_path / "setup.py").write_text("from setuptools import setup\nsetup()")
+
+        result = upgrade_project(tmp_path, backup=False)
+
+        assert result.success
+
+        # Check pyproject.toml was created/updated
+        pyproject = tmp_path / "pyproject.toml"
+        assert pyproject.exists()
+        content = pyproject.read_text()
+        assert "testproject" in content or "requests" in content
 
     def test_upgrade_nonexistent_path(self, tmp_path: Path) -> None:
         """Test upgrading non-existent path."""
