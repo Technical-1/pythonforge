@@ -15,14 +15,9 @@ async function generateImages() {
   await new Promise(r => setTimeout(r, 1000));
 
   const outputPath = path.join(__dirname, '..', '.portfolio', 'preview.png');
-  const element = await page.$('.og-card');
-  if (element) {
-    await element.screenshot({ path: outputPath, type: 'png' });
-    console.log('Generated: ' + outputPath);
-  } else {
-    console.error('Could not find .og-card element');
-    process.exit(1);
-  }
+  await page.screenshot({ path: outputPath, type: 'png' });
+  console.log('Generated: ' + outputPath);
+
   await page.close();
   await browser.close();
 }
