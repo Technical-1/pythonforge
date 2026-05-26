@@ -8,7 +8,7 @@
 
 **Modern Python project bootstrapper with 2025's best toolchain.**
 
-🚀 **Zero Config** • ⚡ **Blazing Fast** • 🔧 **Modern Tools** • 🎯 **Production Ready**
+Zero Config • Modern Tools • One Command
 
 [Installation](#-installation) • [Quick Start](#-quick-start) • [Project Types](#-project-types) • [Commands](#-commands)
 
@@ -18,7 +18,7 @@
 
 ## ✨ What quickforge Does
 
-One command creates a complete, production-ready Python project with modern tooling:
+One command creates a complete Python project with modern tooling:
 
 ```bash
 quickforge new myproject
