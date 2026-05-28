@@ -453,11 +453,12 @@ def detect_ci(path: Path) -> tuple[str | None, dict[str, str]]:
     tuple[str | None, dict[str, str]]
         Tuple of (ci_name, extra_info).
     """
-    # GitHub Actions
+    # GitHub Actions (workflows may use either .yml or .yaml)
     gh_workflows = path / ".github" / "workflows"
-    if gh_workflows.exists() and any(gh_workflows.glob("*.yml")):
-        workflows = list(gh_workflows.glob("*.yml"))
-        return "github-actions", {"workflows": str(len(workflows))}
+    if gh_workflows.exists():
+        workflows = list(gh_workflows.glob("*.yml")) + list(gh_workflows.glob("*.yaml"))
+        if workflows:
+            return "github-actions", {"workflows": str(len(workflows))}
 
     # GitLab CI
     if (path / ".gitlab-ci.yml").exists():

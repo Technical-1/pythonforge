@@ -2,7 +2,7 @@
 {{ config.name }}
 {{ "=" * config.name|length }}
 
-{{ config.description }}
+{{ config.description | py_escape }}
 
 This package was generated with quickforge v{{ quickforge_version }}.
 
@@ -28,7 +28,7 @@ License
 """
 
 __version__ = "0.1.0"
-__author__ = "{{ config.author.name }}"
+__author__ = "{{ config.author.name | py_escape }}"
 
 {% if config.project_type.value == "library" %}
 def hello() -> str:

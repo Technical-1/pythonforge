@@ -37,7 +37,7 @@ from {{ config.package_name }} import __version__
 
 app = FastAPI(
     title="{{ config.name }}",
-    description="{{ config.description }}",
+    description="{{ config.description | py_escape }}",
     version=__version__,
     docs_url="/docs",
     redoc_url="/redoc",
@@ -115,7 +115,7 @@ def main() -> None:
     application logic here.
     """
     print(f"{{ config.name }} v{__version__}")
-    print("{{ config.description }}")
+    print("{{ config.description | py_escape }}")
     print()
     print("Hello from {{ config.name }}!")
 

@@ -3,7 +3,7 @@
 {{ config.description }}
 
 {% if config.features.github_actions %}
-[![CI](https://github.com/{{ config.author.name | lower | replace(' ', '') }}/{{ config.name }}/actions/workflows/ci.yml/badge.svg)](https://github.com/{{ config.author.name | lower | replace(' ', '') }}/{{ config.name }}/actions/workflows/ci.yml)
+[![CI](https://github.com/{{ config.author.name | github_slug }}/{{ config.name }}/actions/workflows/ci.yml/badge.svg)](https://github.com/{{ config.author.name | github_slug }}/{{ config.name }}/actions/workflows/ci.yml)
 {% endif %}
 [![Python {{ config.python_version.value }}+](https://img.shields.io/badge/python-{{ config.python_version.value }}+-blue.svg)](https://www.python.org/downloads/)
 [![License: {{ config.license.value }}](https://img.shields.io/badge/License-{{ config.license.value }}-green.svg)](LICENSE)
@@ -37,7 +37,7 @@ pip install {{ config.name }}
 ### From source
 
 ```bash
-git clone https://github.com/{{ config.author.name | lower | replace(' ', '') }}/{{ config.name }}.git
+git clone https://github.com/{{ config.author.name | github_slug }}/{{ config.name }}.git
 cd {{ config.name }}
 uv sync
 ```
@@ -91,7 +91,7 @@ python -m {{ config.package_name }}.main
 
 ```bash
 # Clone the repository
-git clone https://github.com/{{ config.author.name | lower | replace(' ', '') }}/{{ config.name }}.git
+git clone https://github.com/{{ config.author.name | github_slug }}/{{ config.name }}.git
 cd {{ config.name }}
 
 # Install dependencies (including dev dependencies)

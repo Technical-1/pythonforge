@@ -134,7 +134,7 @@ class TestCLI:
         """Test that --help shows usage information."""
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
-        assert "{{ config.description }}" in result.stdout or "Usage" in result.stdout
+        assert "{{ config.description | py_escape }}" in result.stdout or "Usage" in result.stdout
     
     def test_version_flag(self, runner: CliRunner) -> None:
         """Test that --version shows the version."""

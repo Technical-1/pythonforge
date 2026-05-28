@@ -367,12 +367,18 @@ def _migrate_poetry_to_uv(path: Path, dry_run: bool) -> list[str]:
     # Migrate Python version requirement
     if "python" in poetry.get("dependencies", {}):
         python_req = poetry["dependencies"]["python"]
+        # Poetry allows the python constraint to be either a bare string
+        # ("^3.11") or a table ({ version = "^3.11", ... }); handle both.
+        if isinstance(python_req, dict):
+            python_req = python_req.get("version", "")
+        python_req = str(python_req)
         # Convert Poetry's format (^3.11) to PEP 621 (>=3.11)
         if python_req.startswith("^") or python_req.startswith("~"):
             project["requires-python"] = ">=" + python_req[1:]
-        else:
+        elif python_req:
             project["requires-python"] = python_req
-        changes.append(f"Migrated Python requirement: {project['requires-python']}")
+        if python_req:
+            changes.append(f"Migrated Python requirement: {project['requires-python']}")
 
     # Migrate dependencies
     deps = []
@@ -484,19 +490,33 @@ def _migrate_requirements_to_uv(path: Path, dry_run: bool) -> list[str]:
 
     # Parse requirements.txt
     deps = []
+    skipped: list[str] = []
     with req_file.open(encoding="utf-8") as f:
         for raw_line in f:
             line = raw_line.strip()
             # Skip comments and empty lines
             if not line or line.startswith("#"):
                 continue
-            # Skip -r includes for now
+            # -r (nested requirements) and -e (editable installs) can't be
+            # expressed as plain PEP 621 dependencies; record them so the user
+            # can migrate them manually rather than losing them silently.
             if line.startswith("-r") or line.startswith("-e"):
+                skipped.append(line)
                 continue
             # Handle version specifiers
             deps.append(line)
 
+    if skipped:
+        changes.append(
+            "Skipped "
+            + str(len(skipped))
+            + " line(s) needing manual migration: "
+            + ", ".join(skipped)
+        )
+
     if not deps:
+        if skipped:
+            return changes
         return ["No dependencies found in requirements.txt"]
 
     # Create or update pyproject.toml

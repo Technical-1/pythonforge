@@ -193,12 +193,46 @@ class License(str, Enum):
         SPDX identifiers are standardized short names for licenses
         that tools can parse unambiguously.
 
+        For most licenses the enum value already is the SPDX id. The
+        sole exception is ``Proprietary``, which is not a valid SPDX
+        expression; per the SPDX spec, custom licenses are referenced
+        with a ``LicenseRef-`` prefix.
+
         Returns
         -------
         str
-            The SPDX identifier (same as enum value for most).
+            A valid SPDX expression.
         """
+        if self is License.PROPRIETARY:
+            return "LicenseRef-Proprietary"
         return self.value
+
+    @property
+    def classifier(self) -> str:
+        """
+        The PyPI trove classifier for this license.
+
+        PyPI uses its own controlled vocabulary for license classifiers,
+        which does *not* match SPDX identifiers (e.g. SPDX ``Apache-2.0``
+        maps to the classifier ``Apache Software License``). Emitting the
+        SPDX id directly produces classifiers PyPI rejects.
+
+        Returns
+        -------
+        str
+            A valid ``License ::`` trove classifier.
+        """
+        classifiers = {
+            License.MIT: "License :: OSI Approved :: MIT License",
+            License.APACHE2: "License :: OSI Approved :: Apache Software License",
+            License.GPL3: (
+                "License :: OSI Approved :: GNU General Public License v3 (GPLv3)"
+            ),
+            License.BSD3: "License :: OSI Approved :: BSD License",
+            License.UNLICENSE: "License :: Public Domain",
+            License.PROPRIETARY: "License :: Other/Proprietary License",
+        }
+        return classifiers[self]
 
 
 class TypeCheckingMode(str, Enum):

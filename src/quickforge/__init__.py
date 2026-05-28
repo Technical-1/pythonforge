@@ -53,7 +53,7 @@ MIT License - see LICENSE file for details.
 # =============================================================================
 # Package Metadata
 # =============================================================================
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __author__ = "Technical-1"
 __email__ = "jacobkanfer8@gmail.com"
 __license__ = "MIT"

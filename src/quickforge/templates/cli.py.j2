@@ -34,7 +34,7 @@ from {{ config.package_name }} import __version__
 # The `no_args_is_help=True` means running just `{{ config.name }}` shows help
 app = typer.Typer(
     name="{{ config.name }}",
-    help="{{ config.description }}",
+    help="{{ config.description | py_escape }}",
     no_args_is_help=True,
     add_completion=False,  # Disable shell completion for simplicity
 )
@@ -82,8 +82,8 @@ def main(
     ] = None,
 ) -> None:
     """
-    {{ config.description }}
-    
+    {{ config.description | py_escape }}
+
     Use --help on any command for more information.
     """
     # This callback runs before any command
@@ -159,9 +159,9 @@ def info() -> None:
     info_text = f"""
 [bold]{{ config.name }}[/] v{__version__}
     
-[dim]{{ config.description }}[/]
+[dim]{{ config.description | fstring_escape }}[/]
 
-[yellow]Author:[/] {{ config.author.name }}
+[yellow]Author:[/] {{ config.author.name | fstring_escape }}
 [yellow]License:[/] {{ config.license.value }}
 [yellow]Python:[/] {{ config.python_version.requires_python }}
     """

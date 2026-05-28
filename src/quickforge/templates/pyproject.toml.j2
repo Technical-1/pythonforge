@@ -8,18 +8,18 @@
 [project]
 name = "{{ config.name }}"
 version = "0.1.0"
-description = "{{ config.description }}"
+description = "{{ config.description | toml_escape }}"
 readme = "README.md"
 license = "{{ config.license.spdx_id }}"
 requires-python = "{{ config.python_version.requires_python }}"
 authors = [
-    { name = "{{ config.author.name }}"{% if config.author.email %}, email = "{{ config.author.email }}"{% endif %} }
+    { name = "{{ config.author.name | toml_escape }}"{% if config.author.email %}, email = "{{ config.author.email }}"{% endif %} }
 ]
 keywords = []
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: {{ config.license.value }} License",
+    "{{ config.license.classifier }}",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: {{ config.python_version.value }}",
@@ -73,9 +73,9 @@ dev = [
 {% endif %}
 
 [project.urls]
-Homepage = "https://github.com/{{ config.author.name | lower | replace(' ', '') }}/{{ config.name }}"
-Repository = "https://github.com/{{ config.author.name | lower | replace(' ', '') }}/{{ config.name }}"
-Issues = "https://github.com/{{ config.author.name | lower | replace(' ', '') }}/{{ config.name }}/issues"
+Homepage = "https://github.com/{{ config.author.name | github_slug }}/{{ config.name }}"
+Repository = "https://github.com/{{ config.author.name | github_slug }}/{{ config.name }}"
+Issues = "https://github.com/{{ config.author.name | github_slug }}/{{ config.name }}/issues"
 
 # =============================================================================
 # Build System
