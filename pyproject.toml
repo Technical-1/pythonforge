@@ -10,7 +10,7 @@
 
 [project]
 name = "quickforge"
-version = "0.1.1"
+version = "0.1.2"
 description = "Modern Python project bootstrapper with 2025's best toolchain"
 readme = "README.md"
 license = "MIT"
