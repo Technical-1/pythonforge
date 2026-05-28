@@ -41,6 +41,7 @@ That's it! Your project is ready with all the best practices built in.
 - ✅ VS Code settings optimized
 - ✅ Type checking enabled from day one
 - ✅ Test skeleton with pytest + coverage
+- ✅ Full-text `LICENSE` file for any of six licenses (MIT, Apache-2.0, GPL-3.0, BSD-3-Clause, Unlicense, Proprietary)
 
 ### 🔄 **Migration Tools**
 - Upgrade legacy projects to modern tooling
@@ -166,7 +167,7 @@ quickforge new myproject [OPTIONS]
 |--------|-------|-------------|
 | `--type` | `-t` | Project type: library, app, cli, api, script |
 | `--python` | `-p` | Python version: 3.11, 3.12, 3.13 |
-| `--license` | `-l` | License: MIT, Apache-2.0, GPL-3.0-only, BSD-3-Clause |
+| `--license` | `-l` | License: MIT, Apache-2.0, GPL-3.0-only, BSD-3-Clause, Unlicense, Proprietary |
 | `--author` | `-a` | Author name |
 | `--email` | `-e` | Author email |
 | `--output` | `-o` | Output directory |
